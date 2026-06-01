@@ -1,3 +1,0 @@
-class SongsSuggestionController < ApplicationController
-
-end

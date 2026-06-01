@@ -10,9 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_01_131419) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_01_155139) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "playlists", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "song_id", null: false
+    t.bigint "suggestion_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["song_id"], name: "index_playlists_on_song_id"
+    t.index ["suggestion_id"], name: "index_playlists_on_suggestion_id"
+  end
 
   create_table "songs", force: :cascade do |t|
     t.string "artist"
@@ -20,15 +29,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_01_131419) do
     t.string "genre"
     t.string "title"
     t.datetime "updated_at", null: false
-  end
-
-  create_table "songs_suggestions", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.bigint "song_id", null: false
-    t.bigint "suggestion_id", null: false
-    t.datetime "updated_at", null: false
-    t.index ["song_id"], name: "index_songs_suggestions_on_song_id"
-    t.index ["suggestion_id"], name: "index_songs_suggestions_on_suggestion_id"
   end
 
   create_table "suggestions", force: :cascade do |t|
@@ -48,6 +48,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_01_131419) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
-  add_foreign_key "songs_suggestions", "songs"
-  add_foreign_key "songs_suggestions", "suggestions"
+  add_foreign_key "playlists", "songs"
+  add_foreign_key "playlists", "suggestions"
 end
