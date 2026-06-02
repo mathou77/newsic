@@ -1,7 +1,8 @@
-<h1>How are you feeling?</h1>
-
-<div class="moods">
-  <% @moods.each do |mood| %>
-    <%= button_to mood.titleize, suggestions_path, params: { mood: mood }, method: :post, class: "mood-button" %>
-  <% end %>
+<div class="loading">
+  <p>Analyse de tes goûts Spotify...</p>
+  <%= button_to "Générer mes recommandations", suggestions_path, method: :post, id: "auto-submit" %>
 </div>
+
+<script>
+  document.getElementById("auto-submit").click();
+</script>
