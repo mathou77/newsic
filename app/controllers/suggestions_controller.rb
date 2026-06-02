@@ -9,7 +9,7 @@ class SuggestionsController < ApplicationController
     lastfm  = LastfmService.new
     deezer  = DeezerService.new
 
-    top_tracks = spotify.top_tracks(limit: 5)
+    top_tracks = spotify.top_tracks(limit: 50)
 
     raw_tracks = top_tracks.flat_map do |track|
       artist = track.dig("artists", 0, "name")
