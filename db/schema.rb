@@ -10,13 +10,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_01_155139) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_02_090708) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "playlists", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "song_id", null: false
+    t.integer "status"
     t.bigint "suggestion_id", null: false
     t.datetime "updated_at", null: false
     t.index ["song_id"], name: "index_playlists_on_song_id"
@@ -26,14 +27,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_01_155139) do
   create_table "songs", force: :cascade do |t|
     t.string "artist"
     t.datetime "created_at", null: false
+    t.integer "deezer_id"
     t.string "genre"
+    t.string "image_url"
+    t.string "preview_url"
+    t.string "spotify_uri"
     t.string "title"
     t.datetime "updated_at", null: false
   end
 
   create_table "suggestions", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.string "mood"
     t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_suggestions_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -50,4 +58,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_01_155139) do
 
   add_foreign_key "playlists", "songs"
   add_foreign_key "playlists", "suggestions"
+  add_foreign_key "suggestions", "users"
 end
