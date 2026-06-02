@@ -1,0 +1,11 @@
+<% if @current_song %>
+  <div class="card">
+    <%= image_tag @current_song.song.image_url, alt: "" %>
+    <h2><%= @current_song.song.title %></h2>
+    <p><%= @current_song.song.artist %></p>
+    <audio controls src="<%= @current_song.song.preview_url %>"></audio>
+  </div>
+<% else %>
+  <h2>I'm done!</h2>
+  <%= link_to "See my playlist", recap_suggestion_path(@suggestion) %>
+<% end %>
