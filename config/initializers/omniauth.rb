@@ -4,8 +4,8 @@ OmniAuth.config.on_failure = Proc.new { |env| OmniAuth::FailureEndpoint.new(env)
 
 Rails.application.config.middleware.use OmniAuth::Builder do
   provider :spotify,
-    Rails.application.credentials.spotify[:client_id],
-    Rails.application.credentials.spotify[:client_secret],
+    ENV.fetch("SPOTIFY_CLIENT_ID"),
+    ENV.fetch("SPOTIFY_CLIENT_SECRET"),
     scope: 'user-read-email user-top-read',
     callback_url: ENV.fetch("SPOTIFY_CALLBACK_URL", "http://localhost:3000/auth/spotify/callback")
 end

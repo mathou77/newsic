@@ -1,16 +1,21 @@
 class SuggestionsController < ApplicationController
   def index
-    @moods = LastfmService::MOOD_TAGS.keys
   end
 
   def create
-    mood = params[:mood] || "chill"
-    suggestion = Suggestion.create!(user: current_user, mood: mood)
+    suggestion = Suggestion.create!(user: current_user)
 
-    lastfm = LastfmService.new
-    deezer = DeezerService.new
+    spotify = SpotifyService.new(session[:access_token])
+    lastfm  = LastfmService.new
+    deezer  = DeezerService.new
 
-    raw_tracks = lastfm.tracks_by_mood(mood)
+    top_tracks = spotify.top_tracks(limit: 5)
+
+    raw_tracks = top_tracks.flat_map do |track|
+      artist = track.dig("artists", 0, "name")
+      title  = track["name"]
+      lastfm.similar_tracks(artist: artist, track: title, limit: 10)
+    end.uniq { |t| t["name"] }.shuffle
 
     raw_tracks.each do |track|
       artist = track.dig("artist", "name")
