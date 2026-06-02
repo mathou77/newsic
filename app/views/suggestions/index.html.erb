@@ -1,0 +1,7 @@
+<h1>How are you feeling?</h1>
+
+<div class="moods">
+  <% @moods.each do |mood| %>
+    <%= button_to mood.titleize, suggestions_path, params: { mood: mood }, method: :post, class: "mood-button" %>
+  <% end %>
+</div>

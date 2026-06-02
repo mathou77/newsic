@@ -1,0 +1,20 @@
+<h1>Your <%= @suggestion.mood.titleize %> playlist</h1>
+
+<% if @liked_playlists.any? %>
+  <ul class="recap-list">
+    <% @liked_playlists.each do |playlist| %>
+      <li class="recap-item">
+        <%= image_tag playlist.song.image_url, alt: "" if playlist.song.image_url.present? %>
+        <div>
+          <strong><%= playlist.song.title %></strong>
+          <span><%= playlist.song.artist %></span>
+        </div>
+        <audio controls src="<%= playlist.song.preview_url %>"></audio>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p>You didn't like any songs this time.</p>
+<% end %>
+
+<%= link_to "Start over", suggestions_path %>
