@@ -1,5 +1,5 @@
 class Suggestion < ApplicationRecord
   belongs_to :user
-  has_many :songs_suggestions
-  has_many :songs, through: :songs_suggestions
+  has_many :playlists
+  has_many :songs, through: :playlists
 end
