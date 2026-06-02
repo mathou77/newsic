@@ -1,2 +1,8 @@
-<h1>Pages#home</h1>
-<p>Find me in app/views/pages/home.html.erb</p>
+<div class="home">
+  <% if session[:access_token] %>
+    <p>Bonjour <%= session[:display_name] %> !</p>
+    <%= button_to "Se déconnecter", logout_path, method: :delete %>
+  <% else %>
+    <%= link_to "Se connecter avec Spotify", "/auth/spotify", data: { turbo: false }, class: "btn-spotify" %>
+  <% end %>
+</div>
