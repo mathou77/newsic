@@ -9,7 +9,7 @@ class SessionsController < ApplicationController
     session[:display_name] = auth['info']['name']
     session[:access_token] = auth['credentials']['token']
 
-    redirect_to root_path, notice: "Connecté en tant que #{auth['info']['name']}"
+    redirect_to suggestions_path, notice: "Connecté en tant que #{auth['info']['name']}"
   end
 
   def destroy
