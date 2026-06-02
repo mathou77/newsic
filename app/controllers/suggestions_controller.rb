@@ -35,6 +35,11 @@ class SuggestionsController < ApplicationController
   def show
     @suggestion = Suggestion.find(params[:id])
     @current_song = @suggestion.playlists.pending.first
+    return unless @current_song
+
+    song = @current_song.song
+    fresh = DeezerService.new.fresh_preview_url(song.deezer_id)
+    song.update(preview_url: fresh) if fresh && fresh != song.preview_url
   end
 
   def recap
