@@ -25,6 +25,19 @@ class LastfmService
     response.dig("tracks", "track") || []
   end
 
+  def artist_top_tracks(artist, limit: 20)
+    response = HTTParty.get(BASE_URL, query:
+    {
+      method: "artist.getTopTracks",
+      artist: artist,
+      api_key: @api_key,
+      format: "json",
+      limit: limit
+    })
+
+    response.dig("toptracks", "track") || []
+  end
+
   def similar_tracks(artist:, track:, limit: 20)
     response = HTTParty.get(BASE_URL, query:
     {

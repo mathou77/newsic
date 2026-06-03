@@ -3,75 +3,67 @@ class SuggestionsController < ApplicationController
   end
 
   def create
-    suggestion = Suggestion.create!(user: current_user)
+    filters    = filter_params
+    suggestion = Suggestion.create!(user: current_user, mood: filters[:mood])
+    session[:last_filters] = filters
 
-    spotify = SpotifyService.new(session[:access_token])
-    lastfm  = LastfmService.new
-    deezer  = DeezerService.new
-
-    top_tracks = spotify.top_tracks(limit: 50)
-
-    # Appels Last.fm en parallèle (x10 plus rapide)
-    mutex      = Mutex.new
-    raw_tracks = []
-
-    threads = top_tracks.map do |track|
-      Thread.new do
-        artist  = track.dig("artists", 0, "name")
-        title   = track["name"]
-        similar = lastfm.similar_tracks(artist: artist, track: title, limit: 10)
-        mutex.synchronize { raw_tracks.concat(similar) }
-      end
-    end
-    threads.each(&:join)
-
-    raw_tracks = raw_tracks.uniq { |t| t["name"] }.shuffle
-
-    # Appels Deezer en parallèle par batch de 10
-    playlist_mutex = Mutex.new
-    count          = 0
-
-    raw_tracks.each_slice(10) do |batch|
-      break if count >= 50
-
-      slice_threads = batch.map do |track|
-        Thread.new do
-          next if count >= 50
-
-          artist = track.dig("artist", "name")
-          title  = track["name"]
-          result = deezer.search_track(artist: artist, title: title)
-          next unless result && result["preview"].present?
-
-          playlist_mutex.synchronize do
-            next if count >= 50
-
-            # find_or_initialize + save pour toujours mettre à jour l'URL (qui expire)
-            song = Song.find_or_initialize_by(deezer_id: result["id"])
-            song.title       = title
-            song.artist      = artist
-            song.preview_url = result["preview"]
-            song.image_url   = result.dig("album", "cover_big")
-            song.save!
-
-            suggestion.playlists.create!(song: song, status: :pending)
-            count += 1
-          end
-        end
-      end
-      slice_threads.each(&:join)
-    end
+    RecommendationEngine.new(access_token: session[:access_token], filters: filters).build(suggestion)
 
     redirect_to suggestion_path(suggestion)
   end
 
   def show
     @suggestion = Suggestion.find(params[:id])
-    @playlists  = @suggestion.playlists.pending.includes(:song).limit(10)
+    @filters    = (session[:last_filters] || {}).with_indifferent_access
+    @playlists  = @suggestion.playlists.pending.includes(:song)
   end
 
   def recap
     @suggestion = Suggestion.find(params[:id])
     @liked_playlists = @suggestion.playlists.liked
+  end
+
+  # Live autocomplete for the seed selector (Deezer search, no auth needed).
+  def seed_search
+    query  = params[:q].to_s.strip
+    deezer = DeezerService.new
+    if query.length < 2
+      render json: { artists: [], tracks: [] }
+    else
+      render json: {
+        artists: deezer.search_artists(query),
+        tracks:  deezer.search_tracks(query)
+      }
+    end
+  end
+
+  private
+
+  TIME_RANGES = %w[short_term medium_term long_term].freeze
+  POPULARITY  = %w[mainstream hidden].freeze
+  TEMPOS      = %w[slow medium fast].freeze
+  MAX_SEEDS   = 5
+
+  def filter_params
+    {
+      mood:         params[:mood].presence,
+      genre:        params[:genre].presence,
+      time_range:   TIME_RANGES.include?(params[:time_range]) ? params[:time_range] : "medium_term",
+      count:        (params[:count].presence || 50).to_i.clamp(5, 50),
+      popularity:   POPULARITY.include?(params[:popularity]) ? params[:popularity] : nil,
+      decade:       params[:decade].presence,
+      tempo:        TEMPOS.include?(params[:tempo]) ? params[:tempo] : nil,
+      clean_only:    params[:clean_only].present?,
+      diverse:       params[:diverse].present?,
+      discovery:     params[:discovery].present?,
+      exclude_liked: params[:exclude_liked].present?,
+      seed_artists: clean_seeds(params[:seed_artists]),
+      seed_tracks:  clean_seeds(params[:seed_tracks])
+    }
+  end
+
+  # Accepts an array of strings, drops blanks/dupes, caps the count.
+  def clean_seeds(raw)
+    Array(raw).map { |s| s.to_s.strip }.reject(&:blank?).uniq.first(MAX_SEEDS)
   end
 end

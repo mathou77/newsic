@@ -6,6 +6,6 @@ Rails.application.config.middleware.use OmniAuth::Builder do
   provider :spotify,
     ENV.fetch("SPOTIFY_CLIENT_ID"),
     ENV.fetch("SPOTIFY_CLIENT_SECRET"),
-    scope: 'user-read-email user-top-read',
+    scope: 'user-read-email user-top-read user-library-read',
     callback_path: '/auth/spotify/callback'
 end
