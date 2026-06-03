@@ -1,11 +1,117 @@
-<% if @current_song %>
-  <div class="card">
-    <%= image_tag @current_song.song.image_url, alt: "" %>
-    <h2><%= @current_song.song.title %></h2>
-    <p><%= @current_song.song.artist %></p>
-    <audio controls src="<%= @current_song.song.preview_url %>"></audio>
+<div class="swipe-container">
+  <% if @playlists.any? %>
+    <div class="cards-stack" id="cards-stack">
+      <% @playlists.each_with_index do |playlist, index| %>
+        <div class="swipe-card <%= 'active' if index == 0 %>"
+             data-playlist-id="<%= playlist.id %>"
+             data-vote-url="<%= vote_suggestion_playlist_path(@suggestion, playlist) %>">
+
+          <img src="<%= playlist.song.image_url %>" alt="<%= playlist.song.title %>" class="card-cover">
+
+          <div class="card-info">
+            <h2><%= playlist.song.title %></h2>
+            <p><%= playlist.song.artist %></p>
+          </div>
+
+          <audio class="card-audio" src="<%= playlist.song.preview_url %>" preload="auto"></audio>
+
+          <div class="swipe-buttons">
+            <button class="btn-dislike" onclick="vote(this, 'disliked')">✕</button>
+            <button class="btn-like" onclick="vote(this, 'liked')">♥</button>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="swipe-hint">← dislike &nbsp;&nbsp; like →</div>
+
+  <% else %>
+    <div class="done-screen">
+      <h2>That's it! 🎉</h2>
+      <%= link_to "Voir ma playlist", recap_suggestion_path(@suggestion), class: "btn-recap" %>
+    </div>
+  <% end %>
+</div>
+
+<!-- Overlay tap-to-start : résout le blocage autoplay navigateur -->
+<div id="tap-overlay" class="tap-overlay">
+  <div class="tap-overlay__content">
+    <div class="tap-overlay__icon">🎵</div>
+    <p>Appuie pour démarrer</p>
   </div>
-<% else %>
-  <h2>I'm done!</h2>
-  <%= link_to "See my playlist", recap_suggestion_path(@suggestion) %>
-<% end %>
+</div>
+
+<script>
+  const recapUrl = "<%= recap_suggestion_path(@suggestion) %>";
+  let audioUnlocked = false;
+
+  function getCards() {
+    return document.querySelectorAll('.swipe-card');
+  }
+
+  function playCurrentAudio() {
+    document.querySelectorAll('.card-audio').forEach(a => { a.pause(); a.currentTime = 0; });
+    const active = document.querySelector('.swipe-card.active');
+    if (active) active.querySelector('.card-audio').play().catch(() => {});
+  }
+
+  function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    document.getElementById('tap-overlay').style.display = 'none';
+    playCurrentAudio();
+  }
+
+  function vote(btn, status) {
+    unlockAudio();
+    const card = btn.closest('.swipe-card');
+    const url  = card.dataset.voteUrl;
+
+    fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify({ status })
+    });
+
+    card.classList.add(status === 'liked' ? 'fly-right' : 'fly-left');
+
+    setTimeout(() => {
+      card.remove();
+      const remaining = getCards();
+      if (remaining.length === 0) {
+        window.location.href = recapUrl;
+      } else {
+        remaining[0].classList.add('active');
+        playCurrentAudio();
+      }
+    }, 400);
+  }
+
+  // Swipe tactile
+  let startX = 0;
+  document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const diff = e.changedTouches[0].clientX - startX;
+    const active = document.querySelector('.swipe-card.active');
+    if (!active) return;
+    if (diff > 80)  vote(active.querySelector('.btn-like'), 'liked');
+    if (diff < -80) vote(active.querySelector('.btn-dislike'), 'disliked');
+  });
+
+  // Tentative autoplay silencieuse au chargement (marche si le navigateur l'autorise)
+  document.addEventListener('DOMContentLoaded', () => {
+    const active = document.querySelector('.swipe-card.active');
+    if (!active) return;
+    active.querySelector('.card-audio').play().then(() => {
+      audioUnlocked = true;
+      document.getElementById('tap-overlay').style.display = 'none';
+    }).catch(() => {
+      // Bloqué par le navigateur → l'overlay reste visible
+    });
+  });
+
+  document.getElementById('tap-overlay').addEventListener('click', unlockAudio);
+</script>

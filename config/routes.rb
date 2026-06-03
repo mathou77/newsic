@@ -5,7 +5,9 @@ Rails.application.routes.draw do
 
   resources :suggestions, only: [:index, :show, :create] do
     member { get :recap }
-    resources :songs, only: [:show]
+    resources :playlists, only: [] do
+      member { patch :vote }
+    end
   end
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
