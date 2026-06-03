@@ -1,4 +1,99 @@
 <div class="swipe-container">
+  <button type="button" class="filters-toggle" id="filters-toggle">🎚️ Filtres</button>
+
+  <div class="filters-panel" id="filters-panel">
+    <%= form_with url: suggestions_path, method: :post, data: { turbo: false }, class: "filters-form" do %>
+      <div class="seed-search"
+           id="seed-search"
+           data-search-url="<%= seed_search_suggestions_path %>"
+           data-initial-artists="<%= (@filters[:seed_artists] || []).to_json %>"
+           data-initial-tracks="<%= (@filters[:seed_tracks] || []).to_json %>">
+        <span class="seed-search__label">Artistes / sons</span>
+        <input type="text" id="seed-input" class="seed-input"
+               placeholder="Rechercher un artiste ou un titre…" autocomplete="off">
+        <div class="seed-results" id="seed-results"></div>
+        <div class="seed-chips" id="seed-chips"></div>
+        <div id="seed-inputs"></div>
+      </div>
+
+      <label>
+        Mood
+        <%= select_tag :mood, options_for_select(
+          [["Peu importe", ""], ["Chill", "chill"], ["Énergie", "energy"],
+           ["Focus", "focus"], ["Happy", "happy"], ["Late night", "late night"]],
+          @filters[:mood]) %>
+      </label>
+
+      <label>
+        Genre
+        <%= select_tag :genre, options_for_select(
+          [["Peu importe", ""], ["Pop", "pop"], ["Rock", "rock"], ["Électro", "electronic"],
+           ["Hip-hop", "hip-hop"], ["R&B", "rnb"], ["Jazz", "jazz"], ["Classique", "classical"],
+           ["Metal", "metal"], ["Indie", "indie"], ["Soul", "soul"], ["Reggae", "reggae"],
+           ["Folk", "folk"], ["House", "house"], ["Techno", "techno"]],
+          @filters[:genre]) %>
+      </label>
+
+      <label>
+        Période d'écoute
+        <%= select_tag :time_range, options_for_select(
+          [["4 dernières semaines", "short_term"], ["6 derniers mois", "medium_term"],
+           ["Depuis toujours", "long_term"]],
+          @filters[:time_range] || "medium_term") %>
+      </label>
+
+      <label>
+        Nombre de morceaux
+        <%= select_tag :count, options_for_select(
+          [["10", "10"], ["25", "25"], ["50", "50"]],
+          (@filters[:count] || 50).to_s) %>
+      </label>
+
+      <label>
+        Popularité
+        <%= select_tag :popularity, options_for_select(
+          [["Peu importe", ""], ["Mainstream", "mainstream"], ["Hidden gems", "hidden"]],
+          @filters[:popularity]) %>
+      </label>
+
+      <label>
+        Époque
+        <%= select_tag :decade, options_for_select(
+          [["Peu importe", ""], ["1960s", "1960"], ["1970s", "1970"], ["1980s", "1980"],
+           ["1990s", "1990"], ["2000s", "2000"], ["2010s", "2010"], ["2020s", "2020"]],
+          @filters[:decade]) %>
+      </label>
+
+      <label>
+        Tempo
+        <%= select_tag :tempo, options_for_select(
+          [["Peu importe", ""], ["Lent", "slow"], ["Moyen", "medium"], ["Rapide", "fast"]],
+          @filters[:tempo]) %>
+      </label>
+
+      <div class="filters-switches">
+        <label class="switch">
+          <%= check_box_tag :clean_only, "1", @filters[:clean_only] %>
+          Version clean uniquement
+        </label>
+        <label class="switch">
+          <%= check_box_tag :diverse, "1", @filters[:diverse] %>
+          1 titre max par artiste
+        </label>
+        <label class="switch">
+          <%= check_box_tag :discovery, "1", @filters[:discovery] %>
+          Que des nouveautés (exclure mes artistes connus)
+        </label>
+        <label class="switch">
+          <%= check_box_tag :exclude_liked, "1", @filters[:exclude_liked] %>
+          Ne pas reproposer mes titres likés
+        </label>
+      </div>
+
+      <%= submit_tag "Applique", class: "btn-apply-filters" %>
+    <% end %>
+  </div>
+
   <% if @playlists.any? %>
     <div class="cards-stack" id="cards-stack">
       <% @playlists.each_with_index do |playlist, index| %>
@@ -33,13 +128,16 @@
   <% end %>
 </div>
 
-<!-- Overlay tap-to-start : résout le blocage autoplay navigateur -->
-<div id="tap-overlay" class="tap-overlay">
-  <div class="tap-overlay__content">
-    <div class="tap-overlay__icon">🎵</div>
-    <p>Appuie pour démarrer</p>
+<!-- Overlay tap-to-start : résout le blocage autoplay navigateur.
+     Affiché uniquement s'il y a des cartes (sinon il masquerait le menu de filtres). -->
+<% if @playlists.any? %>
+  <div id="tap-overlay" class="tap-overlay">
+    <div class="tap-overlay__content">
+      <div class="tap-overlay__icon">🎵</div>
+      <p>Appuie pour démarrer</p>
+    </div>
   </div>
-</div>
+<% end %>
 
 <script>
   const recapUrl = "<%= recap_suggestion_path(@suggestion) %>";
@@ -55,10 +153,12 @@
     if (active) active.querySelector('.card-audio').play().catch(() => {});
   }
 
+  const overlay = document.getElementById('tap-overlay');
+
   function unlockAudio() {
     if (audioUnlocked) return;
     audioUnlocked = true;
-    document.getElementById('tap-overlay').style.display = 'none';
+    if (overlay) overlay.style.display = 'none';
     playCurrentAudio();
   }
 
@@ -107,11 +207,106 @@
     if (!active) return;
     active.querySelector('.card-audio').play().then(() => {
       audioUnlocked = true;
-      document.getElementById('tap-overlay').style.display = 'none';
+      if (overlay) overlay.style.display = 'none';
     }).catch(() => {
       // Bloqué par le navigateur → l'overlay reste visible
     });
   });
 
-  document.getElementById('tap-overlay').addEventListener('click', unlockAudio);
+  if (overlay) overlay.addEventListener('click', unlockAudio);
+
+  // Ouverture / fermeture du panneau de filtres
+  document.getElementById('filters-toggle').addEventListener('click', () => {
+    document.getElementById('filters-panel').classList.toggle('open');
+  });
+
+  // ── Recherche d'artistes / sons (graines) ──────────────
+  (function () {
+    const root = document.getElementById('seed-search');
+    if (!root) return;
+
+    const searchUrl = root.dataset.searchUrl;
+    const input     = document.getElementById('seed-input');
+    const resultsEl = document.getElementById('seed-results');
+    const chipsEl   = document.getElementById('seed-chips');
+    const inputsEl  = document.getElementById('seed-inputs');
+
+    // seeds : { kind: 'artist' | 'track', value, label }
+    let seeds = [];
+    JSON.parse(root.dataset.initialArtists || '[]').forEach(name => {
+      seeds.push({ kind: 'artist', value: name, label: name });
+    });
+    JSON.parse(root.dataset.initialTracks || '[]').forEach(entry => {
+      const [artist, title] = entry.split('|');
+      seeds.push({ kind: 'track', value: entry, label: title + ' — ' + artist });
+    });
+
+    function render() {
+      chipsEl.innerHTML = '';
+      inputsEl.innerHTML = '';
+      seeds.forEach((s, i) => {
+        const chip = document.createElement('span');
+        chip.className = 'seed-chip';
+        const txt = document.createElement('span');
+        txt.textContent = (s.kind === 'artist' ? '🎤 ' : '🎵 ') + s.label;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = '×';
+        btn.addEventListener('click', () => { seeds.splice(i, 1); render(); });
+        chip.append(txt, btn);
+        chipsEl.appendChild(chip);
+
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = s.kind === 'artist' ? 'seed_artists[]' : 'seed_tracks[]';
+        hidden.value = s.value;
+        inputsEl.appendChild(hidden);
+      });
+    }
+
+    function addSeed(seed) {
+      const dup = seeds.some(s => s.kind === seed.kind && s.value.toLowerCase() === seed.value.toLowerCase());
+      if (!dup) { seeds.push(seed); render(); }
+      input.value = '';
+      resultsEl.innerHTML = '';
+    }
+
+    function resultRow(emoji, text, seed) {
+      const row = document.createElement('div');
+      row.className = 'seed-result';
+      row.textContent = emoji + ' ' + text;
+      row.addEventListener('click', () => addSeed(seed));
+      return row;
+    }
+
+    function renderResults(data) {
+      resultsEl.innerHTML = '';
+      (data.artists || []).forEach(a => {
+        resultsEl.appendChild(resultRow('🎤', a.name, { kind: 'artist', value: a.name, label: a.name }));
+      });
+      (data.tracks || []).forEach(t => {
+        const label = t.title + ' — ' + t.artist;
+        resultsEl.appendChild(resultRow('🎵', label, { kind: 'track', value: t.artist + '|' + t.title, label }));
+      });
+    }
+
+    let timer = null;
+    input.addEventListener('input', () => {
+      clearTimeout(timer);
+      const q = input.value.trim();
+      if (q.length < 2) { resultsEl.innerHTML = ''; return; }
+      timer = setTimeout(() => {
+        fetch(searchUrl + '?q=' + encodeURIComponent(q), { headers: { 'Accept': 'application/json' } })
+          .then(r => r.json())
+          .then(renderResults)
+          .catch(() => { resultsEl.innerHTML = ''; });
+      }, 300);
+    });
+
+    document.addEventListener('click', e => {
+      if (!root.contains(e.target)) resultsEl.innerHTML = '';
+    });
+
+    render();
+  })();
 </script>
