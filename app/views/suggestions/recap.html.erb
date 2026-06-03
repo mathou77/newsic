@@ -2,7 +2,7 @@
 
   <% if @liked_playlists.any? %>
     <div class="recap-banner">
-      🎵 <%= @liked_playlists.count %> titre<%= @liked_playlists.count > 1 ? "s" : "" %> ajouté<%= @liked_playlists.count > 1 ? "s" : "" %> à tes titres likés sur Spotify !
+      🎵 <%= @liked_playlists.count %> titre<%= @liked_playlists.count > 1 ? "s" : "" %> liké<%= @liked_playlists.count > 1 ? "s" : "" %> !
     </div>
 
     <div class="recap-grid">
@@ -28,4 +28,5 @@
   <% end %>
 
   <%= link_to "Recommencer", suggestions_path, class: "btn-recap" %>
+  <%= button_to "Ajouter à Spotify", save_to_spotify_suggestion_path(@suggestion), method: :post, class: "btn-spotify" %>
 </div>

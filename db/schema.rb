@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_02_095740) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_03_094536) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -31,6 +31,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_095740) do
     t.string "genre"
     t.string "image_url"
     t.string "preview_url"
+    t.string "spotify_id"
     t.string "spotify_uri"
     t.string "title"
     t.datetime "updated_at", null: false

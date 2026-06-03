@@ -1,4 +1,6 @@
 class SuggestionsController < ApplicationController
+  before_action :ensure_fresh_spotify_token
+
   def index
   end
 
@@ -6,6 +8,7 @@ class SuggestionsController < ApplicationController
     suggestion = Suggestion.create!(user: current_user)
 
     spotify = SpotifyService.new(session[:access_token])
+    Rails.logger.info "=== SPOTIFY TOKEN: #{session[:access_token].present? ? 'présent' : 'MANQUANT'} ==="
     lastfm  = LastfmService.new
     deezer  = DeezerService.new
 
@@ -52,6 +55,7 @@ class SuggestionsController < ApplicationController
             song.artist      = artist
             song.preview_url = result["preview"]
             song.image_url   = result.dig("album", "cover_big")
+            song.spotify_id = spotify.search_track_id(artist: artist, title: title) if song.spotify_id.blank?
             song.save!
 
             suggestion.playlists.create!(song: song, status: :pending)
@@ -74,4 +78,21 @@ class SuggestionsController < ApplicationController
     @suggestion = Suggestion.find(params[:id])
     @liked_playlists = @suggestion.playlists.liked
   end
+
+  def save_to_spotify
+    suggestion   = Suggestion.find(params[:id])
+    spotify_ids  = suggestion.playlists.liked.includes(:song).filter_map { |p| p.song.spotify_id }
+
+    if spotify_ids.any?
+      spotify     = SpotifyService.new(session[:access_token])
+      playlist_id = spotify.find_or_create_playlist(existing_id: session[:newsic_playlist_id])
+      session[:newsic_playlist_id] = playlist_id
+
+      spotify.follow_playlist(playlist_id)
+      spotify_ids.each_slice(100) { |batch| spotify.add_tracks_to_playlist(playlist_id: playlist_id, ids: batch) }
+    end
+
+    redirect_to recap_suggestion_path(suggestion), notice: "#{spotify_ids.count} titre(s) ajouté(s) à ta playlist Newsic sur Spotify !"
+  end
+
 end

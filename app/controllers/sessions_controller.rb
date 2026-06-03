@@ -3,11 +3,14 @@ class SessionsController < ApplicationController
   skip_before_action :verify_authenticity_token, only: [:create]
 
   def create
+    
     auth = request.env['omniauth.auth']
 
-    session[:user_id]      = auth['uid']
-    session[:display_name] = auth['info']['name']
-    session[:access_token] = auth['credentials']['token']
+    session[:user_id]          = auth['uid']
+    session[:display_name]     = auth['info']['name']
+    session[:access_token]     = auth['credentials']['token']
+    session[:refresh_token]    = auth['credentials']['refresh_token']
+    session[:token_expires_at] = auth['credentials']['expires_at']
 
     redirect_to suggestions_path, notice: "Connecté en tant que #{auth['info']['name']}"
   end

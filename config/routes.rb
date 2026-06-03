@@ -4,7 +4,10 @@ Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   resources :suggestions, only: [:index, :show, :create] do
-    member { get :recap }
+    member do
+      get  :recap
+      post :save_to_spotify
+    end
     resources :playlists, only: [] do
       member { patch :vote }
     end
@@ -17,6 +20,7 @@ Rails.application.routes.draw do
   get '/auth/spotify/callback', to: 'sessions#create'
   get '/auth/failure', to: 'sessions#failure'
   delete '/logout', to: 'sessions#destroy'
+
 
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
