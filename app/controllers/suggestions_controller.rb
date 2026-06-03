@@ -76,7 +76,8 @@ class SuggestionsController < ApplicationController
   def show
     @suggestion = Suggestion.find(params[:id])
     @filters    = (session[:last_filters] || {}).with_indifferent_access
-    @playlists  = @suggestion.playlists.pending.includes(:song)
+    count       = (@filters[:count].presence || 10).to_i
+    @playlists  = @suggestion.playlists.pending.includes(:song).limit(count)
   end
 
   def recap
@@ -98,6 +99,24 @@ class SuggestionsController < ApplicationController
     end
   end
 
+  def save_to_spotify
+    suggestion   = Suggestion.find(params[:id])
+    spotify_ids  = suggestion.playlists.liked.includes(:song).filter_map { |p| p.song.spotify_id }
+
+    if spotify_ids.any?
+      spotify     = SpotifyService.new(session[:access_token])
+      existing_id = current_user.spotify_playlist_id.presence || session[:newsic_playlist_id].presence
+      playlist_id = spotify.find_or_create_playlist(existing_id: existing_id)
+      current_user.update_column(:spotify_playlist_id, playlist_id)
+      session[:newsic_playlist_id] = playlist_id
+
+      spotify.follow_playlist(playlist_id)
+      spotify_ids.each_slice(100) { |batch| spotify.add_tracks_to_playlist(playlist_id: playlist_id, ids: batch) }
+    end
+
+    redirect_to recap_suggestion_path(suggestion), notice: "#{spotify_ids.count} titre(s) ajouté(s) à ta playlist Newsic sur Spotify !"
+  end
+
   private
 
   TIME_RANGES = %w[short_term medium_term long_term].freeze
@@ -110,7 +129,7 @@ class SuggestionsController < ApplicationController
       mood:         params[:mood].presence,
       genre:        params[:genre].presence,
       time_range:   TIME_RANGES.include?(params[:time_range]) ? params[:time_range] : "medium_term",
-      count:        (params[:count].presence || 50).to_i.clamp(5, 50),
+      count:        (params[:count].presence || 10).to_i.clamp(5, 50),
       popularity:   POPULARITY.include?(params[:popularity]) ? params[:popularity] : nil,
       decade:       params[:decade].presence,
       tempo:        TEMPOS.include?(params[:tempo]) ? params[:tempo] : nil,
@@ -126,22 +145,6 @@ class SuggestionsController < ApplicationController
   # Accepts an array of strings, drops blanks/dupes, caps the count.
   def clean_seeds(raw)
     Array(raw).map { |s| s.to_s.strip }.reject(&:blank?).uniq.first(MAX_SEEDS)
-  end
-
-  def save_to_spotify
-    suggestion   = Suggestion.find(params[:id])
-    spotify_ids  = suggestion.playlists.liked.includes(:song).filter_map { |p| p.song.spotify_id }
-
-    if spotify_ids.any?
-      spotify     = SpotifyService.new(session[:access_token])
-      playlist_id = spotify.find_or_create_playlist(existing_id: session[:newsic_playlist_id])
-      session[:newsic_playlist_id] = playlist_id
-
-      spotify.follow_playlist(playlist_id)
-      spotify_ids.each_slice(100) { |batch| spotify.add_tracks_to_playlist(playlist_id: playlist_id, ids: batch) }
-    end
-
-    redirect_to recap_suggestion_path(suggestion), notice: "#{spotify_ids.count} titre(s) ajouté(s) à ta playlist Newsic sur Spotify !"
   end
 
 end
