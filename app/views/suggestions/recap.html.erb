@@ -1,20 +1,31 @@
-<h1>Your <%= @suggestion.mood.titleize %> playlist</h1>
+<div class="recap-container">
 
-<% if @liked_playlists.any? %>
-  <ul class="recap-list">
-    <% @liked_playlists.each do |playlist| %>
-      <li class="recap-item">
-        <%= image_tag playlist.song.image_url, alt: "" if playlist.song.image_url.present? %>
-        <div>
-          <strong><%= playlist.song.title %></strong>
-          <span><%= playlist.song.artist %></span>
+  <% if @liked_playlists.any? %>
+    <div class="recap-banner">
+      🎵 <%= @liked_playlists.count %> titre<%= @liked_playlists.count > 1 ? "s" : "" %> ajouté<%= @liked_playlists.count > 1 ? "s" : "" %> à tes titres likés sur Spotify !
+    </div>
+
+    <div class="recap-grid">
+      <% @liked_playlists.each do |playlist| %>
+        <div class="recap-card">
+          <% if playlist.song.image_url.present? %>
+            <img src="<%= playlist.song.image_url %>" alt="<%= playlist.song.title %>" class="recap-cover">
+          <% else %>
+            <div class="recap-cover recap-cover--placeholder">♪</div>
+          <% end %>
+          <div class="recap-info">
+            <span class="recap-title"><%= playlist.song.title %></span>
+            <span class="recap-artist"><%= playlist.song.artist %></span>
+          </div>
         </div>
-        <audio controls src="<%= playlist.song.preview_url %>"></audio>
-      </li>
-    <% end %>
-  </ul>
-<% else %>
-  <p>You didn't like any songs this time.</p>
-<% end %>
+      <% end %>
+    </div>
 
-<%= link_to "Start over", suggestions_path %>
+  <% else %>
+    <div class="recap-empty">
+      <p>Tu n'as liké aucun titre cette fois.</p>
+    </div>
+  <% end %>
+
+  <%= link_to "Recommencer", suggestions_path, class: "btn-recap" %>
+</div>
