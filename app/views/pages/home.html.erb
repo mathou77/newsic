@@ -1,8 +1,33 @@
-<div class="home">
-  <% if session[:access_token] %>
-    <p>Bonjour <%= session[:display_name] %> !</p>
-    <%= button_to "Se déconnecter", logout_path, method: :delete %>
-  <% else %>
-    <%= link_to "Se connecter avec Spotify", "/auth/spotify", data: { turbo: false }, class: "btn-spotify" %>
-  <% end %>
+<div class="onboarding-page">
+  <div class="brand">
+    <div class="brand-logo">♫</div>
+    <div>
+      <h1>NEWSIC</h1>
+      <p>La musique à portée de main</p>
+    </div>
+  </div>
+
+  <div class="onboarding-content">
+    <% if session[:access_token] %>
+      <p class="welcome-text">Bonjour <%= session[:display_name] %> !</p>
+
+      <h2>Prêt·e à découvrir de nouveaux sons ?</h2>
+
+      <%= link_to "Commencer la découverte", "#", class: "start-button" %>
+
+      <%= button_to "Se déconnecter", logout_path, method: :delete, class: "logout-button" %>
+    <% else %>
+      <h2>Connectez-vous pour découvrir de nouveaux sons</h2>
+
+      <%= link_to "Se connecter avec Spotify",
+                  "/auth/spotify",
+                  data: { turbo: false },
+                  class: "spotify-button" %>
+    <% end %>
+  </div>
+
+  <div class="onboarding-help">
+    <p>Un problème avec la connexion Spotify ?</p>
+    <%= link_to "Obtenir de l’aide", "#" %>
+  </div>
 </div>

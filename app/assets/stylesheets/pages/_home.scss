@@ -1,1 +1,192 @@
 // Specific CSS for your home-page
+
+.onboarding-page {
+  min-height: 100vh;
+  padding: 40px 28px 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  background:
+    radial-gradient(circle at 50% 58%, rgba(69, 115, 255, 0.85) 0%, rgba(81, 65, 255, 0.42) 30%, rgba(5, 5, 16, 0.98) 68%),
+    #050510;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  background: linear-gradient(135deg, #ff4fd8, #7c5cff, #40d9ff);
+  box-shadow: 0 0 28px rgba(124, 92, 255, 0.65);
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: 2px;
+  font-weight: 800;
+}
+
+.brand p {
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.onboarding-content {
+  text-align: center;
+}
+
+.onboarding-content h2 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.25;
+  font-weight: 400;
+}
+
+.spotify-button {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  margin: 48px auto 0;
+  padding: 14px 24px;
+  border-radius: 999px;
+
+  background: #1db954;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 700;
+
+  box-shadow: 0 0 24px rgba(29, 185, 84, 0.35);
+}
+
+.spotify-button:hover {
+  color: white;
+  background: #1ed760;
+}
+
+.start-button {
+  display: block;
+  max-width: 240px;
+  margin: 40px auto 0;
+  padding: 14px 22px;
+  border-radius: 14px;
+  background: rgba(39, 39, 49, 0.95);
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.welcome-text {
+  font-size: 18px;
+  margin-bottom: 24px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.logout-button {
+  margin-top: 24px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: underline;
+}
+
+.onboarding-help {
+  text-align: center;
+  font-size: 15px;
+}
+
+.onboarding-help p {
+  margin: 0 0 6px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.onboarding-help a {
+  color: white;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-page {
+  min-height: 100vh;
+  padding: 36px 28px;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(73, 136, 255, 0.55), transparent 42%),
+    #050510;
+  color: white;
+}
+
+.auth-card {
+  min-height: calc(100vh - 72px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.auth-brand {
+  margin-bottom: 56px;
+}
+
+.auth-card h2 {
+  font-size: 32px;
+  margin-bottom: 28px;
+}
+
+.auth-inputs label {
+  color: white;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.auth-inputs input {
+  width: 100%;
+  border: none;
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-size: 16px;
+}
+
+.auth-inputs .form-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.auth-inputs .form-check-input {
+  width: 20px;
+  height: 20px;
+}
+
+.auth-button {
+  width: 100%;
+  border: none;
+  border-radius: 999px;
+  padding: 15px 20px;
+  background: #6f5cff;
+  color: white;
+  font-weight: 800;
+  margin-top: 16px;
+}
+
+.auth-links {
+  margin-top: 28px;
+  text-align: center;
+}
+
+.auth-links a {
+  color: white;
+  font-weight: 700;
+  text-decoration: none;
+}
