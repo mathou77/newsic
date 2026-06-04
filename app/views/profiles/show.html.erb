@@ -3,6 +3,12 @@
     <div class="profile-avatar"><%= avatar_for(@user, size: 96) %></div>
     <h1 class="profile-name"><%= @user.display_name %></h1>
 
+    <div class="friend-code" data-controller="clipboard" data-clipboard-text-value="<%= @user.friend_code %>">
+      <span class="friend-code__value">#<%= @user.friend_code %></span>
+      <button type="button" class="friend-code__copy" data-action="clipboard#copy">Copier</button>
+    </div>
+    <p class="friend-code__hint">Partage ce code pour qu'on t'ajoute en ami.</p>
+
     <div class="profile-stats">
       <div class="profile-stat">
         <span class="profile-stat__num"><%= @playlist_count %></span>

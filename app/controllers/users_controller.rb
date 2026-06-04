@@ -1,8 +1,15 @@
 class UsersController < ApplicationController
   # Directory of people to befriend.
   def index
-    @users = User.where.not(id: current_user.id).order(:display_name)
-    @users = @users.where("display_name ILIKE ?", "%#{params[:q]}%") if params[:q].present?
+    @users = User.where.not(id: current_user.id)
+                 .where.not(spotify_uid: nil)
+                 .order(:display_name)
+    if params[:q].present?
+      @users = @users.where(
+        "display_name ILIKE :name OR friend_code = :code",
+        name: "%#{params[:q].strip}%", code: User.normalize_code(params[:q])
+      )
+    end
   end
 
   def show

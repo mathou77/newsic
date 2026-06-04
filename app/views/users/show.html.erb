@@ -2,6 +2,7 @@
   <header class="profile-header">
     <div class="profile-avatar"><%= avatar_for(@user, size: 96) %></div>
     <h1 class="profile-name"><%= @user.display_name %></h1>
+    <span class="friend-code__value friend-code__value--sm">#<%= @user.friend_code %></span>
 
     <%= render "users/friend_actions", user: @user, friendship: @friendship %>
   </header>

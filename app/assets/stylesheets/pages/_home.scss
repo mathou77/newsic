@@ -19,14 +19,10 @@
 }
 
 .brand-logo {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-size: 22px;
-  background: linear-gradient(135deg, #ff4fd8, #7c5cff, #40d9ff);
-  box-shadow: 0 0 28px rgba(124, 92, 255, 0.65);
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px rgba(124, 92, 255, 0.6));
 }
 
 .brand h1 {
