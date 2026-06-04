@@ -10,3 +10,17 @@
 // Your CSS partials
 @import "components/index";
 @import "pages/index";
+
+body {
+  margin: 0;
+  background: #0b0b14;
+  color: white;
+}
+
+.mobile-app {
+  max-width: 430px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: #050510;
+  overflow: hidden;
+}
