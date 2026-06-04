@@ -1,4 +1,4 @@
-// Floating bottom navigation — "liquid glass" style.
+// Floating bottom navigation — dark "liquid glass" style.
 // Left: profile (social) · Center: site logo = swipe/discovery · Right: messages.
 
 .bottom-nav {
@@ -18,22 +18,21 @@
   justify-content: space-between;
 
   border-radius: 30px;
-  border: 1px solid rgba($white, 0.16);
-  background: linear-gradient(180deg, rgba($white, 0.14), rgba($white, 0.05));
-  backdrop-filter: blur(22px) saturate(180%);
-  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid rgba($white, 0.07);
+  background: linear-gradient(180deg, rgba(18, 16, 28, 0.88), rgba(7, 6, 12, 0.94));
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
   box-shadow:
-    0 10px 34px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba($white, 0.25),
-    inset 0 -1px 0 rgba($white, 0.06);
+    0 12px 40px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba($white, 0.06);
 
-  // Liquid specular sheen
+  // Faint top sheen
   &::before {
     content: "";
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: radial-gradient(120% 80% at 22% 0%, rgba($white, 0.28), transparent 58%);
+    background: radial-gradient(120% 80% at 50% 0%, rgba($white, 0.08), transparent 55%);
     pointer-events: none;
   }
 }
@@ -45,7 +44,7 @@
   align-items: center;
   gap: 4px;
 
-  color: rgba($white, 0.7);
+  color: rgba($white, 0.55);
   text-decoration: none;
   font-family: $font-sans;
   font-size: 11px;
@@ -61,38 +60,39 @@
   }
 }
 
-// Raised glass disc holding the site logo (the swipe entry point).
+// Raised disc holding the site logo (the swipe entry point).
 .bottom-nav-center {
   flex: 0 0 auto;
-  width: 66px;
-  height: 66px;
-  margin-top: -26px;
+  width: 68px;
+  height: 68px;
+  margin-top: -28px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
   border-radius: 50%;
-  border: 1px solid rgba($white, 0.22);
-  background: linear-gradient(180deg, rgba($white, 0.20), rgba($white, 0.06));
-  backdrop-filter: blur(22px) saturate(180%);
-  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  background: radial-gradient(circle at 50% 30%, rgba($violet-500, 0.5), #0a0910 78%);
   box-shadow:
-    0 8px 24px rgba($violet-500, 0.45),
-    inset 0 1px 0 rgba($white, 0.35);
+    0 0 0 1.5px rgba($violet-500, 0.65),
+    0 0 22px rgba($violet-500, 0.55),
+    0 10px 26px rgba(0, 0, 0, 0.55),
+    inset 0 1px 1px rgba($white, 0.18);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
   img {
-    width: 46px;
-    height: 46px;
+    width: 50px;
+    height: 50px;
     object-fit: contain;
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.55));
   }
 
   &:hover {
     transform: translateY(-3px);
     box-shadow:
-      0 12px 30px rgba($violet-500, 0.6),
-      inset 0 1px 0 rgba($white, 0.4);
+      0 0 0 1.5px rgba($magenta-500, 0.8),
+      0 0 30px rgba($violet-500, 0.7),
+      0 14px 32px rgba(0, 0, 0, 0.6),
+      inset 0 1px 1px rgba($white, 0.22);
   }
 }
