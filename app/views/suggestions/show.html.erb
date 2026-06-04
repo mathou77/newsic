@@ -53,7 +53,7 @@
         Nombre de morceaux
         <%= select_tag :count, options_for_select(
           [["10", "10"], ["25", "25"], ["50", "50"]],
-          (@filters[:count] || 50).to_s) %>
+          (@filters[:count] || 10).to_s) %>
       </label>
 
       <label>
