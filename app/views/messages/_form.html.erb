@@ -1,0 +1,5 @@
+<%= form_with model: [conversation, message], id: "message_form", class: "chat-form" do |f| %>
+  <%= f.text_field :body, placeholder: "Écris un message…", autocomplete: "off",
+                   class: "chat-form__input", autofocus: true %>
+  <%= f.submit "Envoyer", class: "chat-form__send" %>
+<% end %>

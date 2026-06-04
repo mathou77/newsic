@@ -1,5 +1,14 @@
 <div class="loading">
-  <p>Analyse de tes goûts Spotify...</p>
+  <div class="loading-neon" aria-hidden="true">
+    <span class="loading-blob loading-blob--violet"></span>
+    <span class="loading-blob loading-blob--magenta"></span>
+    <span class="loading-blob loading-blob--blue"></span>
+  </div>
+
+  <div class="loading-content">
+    <%= image_tag "logo-orb.png", class: "loading-orb", alt: "Newsic" %>
+    <p class="loading-text">Analyse de tes goûts Spotify<span class="loading-dots"></span></p>
+  </div>
 </div>
 
 <form id="auto-submit-form" action="<%= suggestions_path %>" method="post" style="display:none">

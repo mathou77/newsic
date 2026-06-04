@@ -1,4 +1,4 @@
-<div class="swipe-container">
+<div class="swipe-container" data-recap-url="<%= recap_suggestion_path(@suggestion) %>">
   <button type="button" class="filters-toggle" id="filters-toggle">🎚️ Filtres</button>
 
   <div class="filters-panel" id="filters-panel">
@@ -147,96 +147,108 @@
 <% end %>
 
 <script>
-  const recapUrl = "<%= recap_suggestion_path(@suggestion) %>";
-  let audioUnlocked = false;
+  // Wrapped in an IIFE and bound to `turbo:load` so it stays reliable across
+  // Turbo navigations (no global `const` re-declaration, listeners re-attach
+  // on every page render). Runs its setup only once per rendered page.
+  (function () {
+    if (window.__newsicSwipe) return;
+    window.__newsicSwipe = true;
+    window.__newsicAudioUnlocked = false;
 
-  function getCards() {
-    return document.querySelectorAll('.swipe-card');
-  }
+    function playCurrentAudio() {
+      document.querySelectorAll('.card-audio').forEach(a => { a.pause(); a.currentTime = 0; });
+      const active = document.querySelector('.swipe-card.active');
+      if (active) active.querySelector('.card-audio').play().catch(() => {});
+    }
 
-  function playCurrentAudio() {
-    document.querySelectorAll('.card-audio').forEach(a => { a.pause(); a.currentTime = 0; });
-    const active = document.querySelector('.swipe-card.active');
-    if (active) active.querySelector('.card-audio').play().catch(() => {});
-  }
-
-  const overlay = document.getElementById('tap-overlay');
-
-  function unlockAudio() {
-    if (audioUnlocked) return;
-    audioUnlocked = true;
-    if (overlay) overlay.style.display = 'none';
-    playCurrentAudio();
-  }
-
-  function vote(btn, status) {
-    unlockAudio();
-    const card = btn.closest('.swipe-card');
-    const url  = card.dataset.voteUrl;
-
-    fetch(url, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
-      },
-      body: JSON.stringify({ status })
-    });
-
-    card.classList.add(status === 'liked' ? 'fly-right' : 'fly-left');
-
-    setTimeout(() => {
-      card.remove();
-      const remaining = getCards();
-      if (remaining.length === 0) {
-        window.location.href = recapUrl;
-      } else {
-        remaining[0].classList.add('active');
-        playCurrentAudio();
-      }
-    }, 400);
-  }
-
-  // Swipe tactile
-  let startX = 0;
-  document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
-  document.addEventListener('touchend', e => {
-    const diff = e.changedTouches[0].clientX - startX;
-    const active = document.querySelector('.swipe-card.active');
-    if (!active) return;
-    if (diff > 80)  vote(active.querySelector('.btn-like'), 'liked');
-    if (diff < -80) vote(active.querySelector('.btn-dislike'), 'disliked');
-  });
-
-  // Tentative autoplay silencieuse au chargement (marche si le navigateur l'autorise)
-  document.addEventListener('DOMContentLoaded', () => {
-    const active = document.querySelector('.swipe-card.active');
-    if (!active) return;
-    active.querySelector('.card-audio').play().then(() => {
-      audioUnlocked = true;
+    function unlockAudio() {
+      if (window.__newsicAudioUnlocked) return;
+      window.__newsicAudioUnlocked = true;
+      const overlay = document.getElementById('tap-overlay');
       if (overlay) overlay.style.display = 'none';
-    }).catch(() => {
-      // Bloqué par le navigateur → l'overlay reste visible
+      playCurrentAudio();
+    }
+
+    // Referenced by inline onclick="vote(...)" → must be global.
+    window.vote = function (btn, status) {
+      unlockAudio();
+      const card = btn.closest('.swipe-card');
+      const container = document.querySelector('.swipe-container');
+      const recapUrl = container ? container.dataset.recapUrl : '/';
+
+      fetch(card.dataset.voteUrl, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ status })
+      });
+
+      card.classList.add(status === 'liked' ? 'fly-right' : 'fly-left');
+
+      setTimeout(() => {
+        card.remove();
+        const remaining = document.querySelectorAll('.swipe-card');
+        if (remaining.length === 0) {
+          window.location.href = recapUrl;
+        } else {
+          remaining[0].classList.add('active');
+          playCurrentAudio();
+        }
+      }, 400);
+    };
+
+    // Swipe tactile (bound once on document)
+    let startX = 0;
+    document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
+    document.addEventListener('touchend', e => {
+      const diff = e.changedTouches[0].clientX - startX;
+      const active = document.querySelector('.swipe-card.active');
+      if (!active) return;
+      if (diff > 80)  window.vote(active.querySelector('.btn-like'), 'liked');
+      if (diff < -80) window.vote(active.querySelector('.btn-dislike'), 'disliked');
     });
-  });
 
-  if (overlay) overlay.addEventListener('click', unlockAudio);
+    // Per-page setup — runs once for each freshly rendered show page.
+    function initPage() {
+      const container = document.querySelector('.swipe-container');
+      if (!container || container.dataset.swipeReady === '1') return;
+      container.dataset.swipeReady = '1';
 
-  // Ouverture / fermeture du panneau de filtres
+      const overlay = document.getElementById('tap-overlay');
+      if (overlay) overlay.addEventListener('click', unlockAudio);
+
+      // Ouverture / fermeture du panneau de filtres
       const filtersToggle = document.getElementById('filters-toggle');
-      const filtersPanel = document.getElementById('filters-panel');
-      const filtersClose = document.getElementById('filters-close');
+      const filtersPanel  = document.getElementById('filters-panel');
+      const filtersClose  = document.getElementById('filters-close');
+      if (filtersToggle && filtersPanel) {
+        filtersToggle.addEventListener('click', () => filtersPanel.classList.add('open'));
+      }
+      if (filtersClose && filtersPanel) {
+        filtersClose.addEventListener('click', () => filtersPanel.classList.remove('open'));
+      }
 
-      filtersToggle.addEventListener('click', () => {
-        filtersPanel.classList.add('open');
-      });
+      // Tentative autoplay silencieuse (marche si le navigateur l'autorise)
+      const active = document.querySelector('.swipe-card.active');
+      if (active) {
+        active.querySelector('.card-audio').play().then(() => {
+          window.__newsicAudioUnlocked = true;
+          if (overlay) overlay.style.display = 'none';
+        }).catch(() => {
+          // Bloqué par le navigateur → l'overlay reste visible
+        });
+      }
 
-      filtersClose.addEventListener('click', () => {
-        filtersPanel.classList.remove('open');
-      });
+      initSeedSearch();
+    }
+
+    document.addEventListener('turbo:load', initPage);
+    document.addEventListener('DOMContentLoaded', initPage);
 
   // ── Recherche d'artistes / sons (graines) ──────────────
-  (function () {
+  function initSeedSearch() {
     const root = document.getElementById('seed-search');
     if (!root) return;
 
@@ -323,5 +335,6 @@
     });
 
     render();
+  }
   })();
 </script>

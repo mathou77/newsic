@@ -1,0 +1,98 @@
+// Floating bottom navigation — "liquid glass" style.
+// Left: profile (social) · Center: site logo = swipe/discovery · Right: messages.
+
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 40;
+
+  width: calc(100% - 28px);
+  max-width: 402px;
+  height: 66px;
+  padding: 0 26px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-radius: 30px;
+  border: 1px solid rgba($white, 0.16);
+  background: linear-gradient(180deg, rgba($white, 0.14), rgba($white, 0.05));
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  box-shadow:
+    0 10px 34px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba($white, 0.25),
+    inset 0 -1px 0 rgba($white, 0.06);
+
+  // Liquid specular sheen
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(120% 80% at 22% 0%, rgba($white, 0.28), transparent 58%);
+    pointer-events: none;
+  }
+}
+
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  color: rgba($white, 0.7);
+  text-decoration: none;
+  font-family: $font-sans;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  transition: color 0.2s ease, transform 0.2s ease;
+
+  i { font-size: 20px; }
+
+  &:hover,
+  &.is-active {
+    color: $white;
+    transform: translateY(-1px);
+  }
+}
+
+// Raised glass disc holding the site logo (the swipe entry point).
+.bottom-nav-center {
+  flex: 0 0 auto;
+  width: 66px;
+  height: 66px;
+  margin-top: -26px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  border: 1px solid rgba($white, 0.22);
+  background: linear-gradient(180deg, rgba($white, 0.20), rgba($white, 0.06));
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  box-shadow:
+    0 8px 24px rgba($violet-500, 0.45),
+    inset 0 1px 0 rgba($white, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  img {
+    width: 46px;
+    height: 46px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+  }
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      0 12px 30px rgba($violet-500, 0.6),
+      inset 0 1px 0 rgba($white, 0.4);
+  }
+}

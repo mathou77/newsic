@@ -1,0 +1,15 @@
+<nav class="bottom-nav">
+  <%= link_to profile_path, class: "bottom-nav-item" do %>
+    <i class="fa-solid fa-user"></i>
+    <span>Profil</span>
+  <% end %>
+
+  <%= link_to suggestions_path, class: "bottom-nav-center", data: { turbo: false } do %>
+    <%= image_tag "logo-orb.png", alt: "Découvrir" %>
+  <% end %>
+
+  <%= link_to conversations_path, class: "bottom-nav-item" do %>
+    <i class="fa-solid fa-comment-dots"></i>
+    <span>Messages</span>
+  <% end %>
+</nav>
