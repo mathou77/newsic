@@ -1,0 +1,17 @@
+<%# Reaction buttons + counter. Replaced in place (Turbo) on every toggle. %>
+<div class="reactions" id="reactions_<%= message.id %>"
+     data-controller="reaction" data-reaction-message-id-value="<%= message.id %>">
+  <% summary = message.reaction_summary %>
+  <% if summary.any? %>
+    <div class="reaction-counts">
+      <% summary.each do |emoji, count| %>
+        <span class="reaction-count"><%= emoji %> <%= count %></span>
+      <% end %>
+    </div>
+  <% end %>
+  <div class="reaction-buttons">
+    <% MessageReaction::EMOJIS.each do |emoji| %>
+      <button type="button" class="reaction-btn" data-action="reaction#toggle" data-emoji="<%= emoji %>"><%= emoji %></button>
+    <% end %>
+  </div>
+</div>

@@ -7,8 +7,10 @@
   <%= turbo_stream_from @conversation %>
 
   <header class="chat-header">
-    <%= link_to conversations_path, class: "chat-header__back" do %>‹<% end %>
-    <span class="user-row__avatar"><%= avatar_for(@other, size: 40) %></span>
+    <%= link_to conversations_path, class: "chat-header__back" do %>
+      <i class="fa-solid fa-chevron-left"></i>
+    <% end %>
+    <span class="chat-header__avatar"><%= avatar_for(@other, size: 40) %></span>
     <span class="chat-header__name"><%= @other.display_name %></span>
   </header>
 

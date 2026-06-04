@@ -1,4 +1,5 @@
-<div class="swipe-container" data-recap-url="<%= recap_suggestion_path(@suggestion) %>">
+<div class="swipe-container" data-recap-url="<%= recap_suggestion_path(@suggestion) %>"
+     data-controller="share-sheet" data-share-sheet-url-value="<%= shares_path %>">
   <button type="button" class="filters-toggle" id="filters-toggle">🎚️ Filtres</button>
 
   <div class="filters-panel" id="filters-panel">
@@ -108,6 +109,16 @@
              data-playlist-id="<%= playlist.id %>"
              data-vote-url="<%= vote_suggestion_playlist_path(@suggestion, playlist) %>">
 
+          <div class="card-actions">
+            <button type="button" class="card-action" data-action="share-sheet#open"
+                    data-song-id="<%= playlist.song.id %>" aria-label="Partager">
+              <i class="fa-solid fa-share"></i>
+            </button>
+            <button type="button" class="card-action" aria-label="Plus">
+              <i class="fa-solid fa-ellipsis"></i>
+            </button>
+          </div>
+
           <img src="<%= playlist.song.image_url %>" alt="<%= playlist.song.title %>" class="card-cover">
 
           <div class="card-info">
@@ -133,6 +144,45 @@
       <%= link_to "Voir ma playlist", recap_suggestion_path(@suggestion), class: "btn-recap" %>
     </div>
   <% end %>
+
+  <%# --- Share bottom sheet --- %>
+  <div class="share-sheet" data-share-sheet-target="sheet" hidden>
+    <div class="share-sheet__backdrop" data-action="share-sheet#close"></div>
+    <div class="share-sheet__panel" data-share-sheet-target="panel">
+      <div class="share-sheet__handle"
+           data-action="touchstart->share-sheet#dragStart touchmove->share-sheet#dragMove touchend->share-sheet#dragEnd">
+        <div class="share-sheet__grabber"></div>
+        <h3 class="share-sheet__title">Partager à…</h3>
+      </div>
+
+      <input type="text" class="share-sheet__search" placeholder="Rechercher un ami…"
+             autocomplete="off" data-share-sheet-target="search" data-action="input->share-sheet#filter">
+
+      <div class="share-sheet__friends" data-share-sheet-target="friends">
+        <% if @friends.empty? %>
+          <p class="empty-state">Pas encore d'amis à qui partager.</p>
+        <% else %>
+          <% @friends.each do |friend| %>
+            <button type="button" class="share-friend" data-share-sheet-target="friend"
+                    data-friend-id="<%= friend.id %>" data-name="<%= friend.display_name.to_s.downcase %>"
+                    data-action="share-sheet#toggleFriend">
+              <span class="share-friend__avatar"><%= avatar_for(friend, size: 44) %></span>
+              <span class="share-friend__name"><%= friend.display_name %></span>
+              <span class="share-friend__check"><i class="fa-solid fa-check"></i></span>
+            </button>
+          <% end %>
+        <% end %>
+      </div>
+
+      <input type="text" class="share-sheet__message" placeholder="Ajouter un message (ex: Écoute ça !)"
+             autocomplete="off" data-share-sheet-target="message">
+
+      <button type="button" class="share-sheet__send" data-action="share-sheet#send"
+              data-share-sheet-target="send">Envoyer</button>
+    </div>
+  </div>
+
+  <div class="toast" data-share-sheet-target="toast" hidden>Partagé !</div>
 </div>
 
 <!-- Overlay tap-to-start : résout le blocage autoplay navigateur.
