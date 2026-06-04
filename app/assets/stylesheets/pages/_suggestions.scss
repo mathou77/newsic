@@ -232,3 +232,40 @@
 
   &:hover { background: #17a349; }
 }
+
+// Tap-to-start overlay — full screen so it captures the first interaction
+// (needed to unlock browser audio autoplay) instead of sitting in page flow.
+.tap-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 5, 16, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+
+.tap-overlay__content {
+  text-align: center;
+  color: white;
+}
+
+.tap-overlay__icon {
+  font-size: 56px;
+  margin-bottom: 12px;
+  animation: tap-pulse 1.4s infinite ease-in-out;
+}
+
+.tap-overlay p {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+@keyframes tap-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.85; }
+  50%      { transform: scale(1.12); opacity: 1; }
+}

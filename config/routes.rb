@@ -1,5 +1,4 @@
 Rails.application.routes.draw do
-  devise_for :users
   root to: "pages#home"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
@@ -21,6 +20,14 @@ Rails.application.routes.draw do
   get '/auth/spotify/callback', to: 'sessions#create'
   get '/auth/failure', to: 'sessions#failure'
   delete '/logout', to: 'sessions#destroy'
+
+  # Social: profile, friends, real-time DMs
+  get "profile", to: "profiles#show", as: :profile
+  resources :users, only: [:index, :show]
+  resources :friendships, only: [:create, :update, :destroy]
+  resources :conversations, only: [:index, :show, :create] do
+    resources :messages, only: [:create]
+  end
 
 
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)

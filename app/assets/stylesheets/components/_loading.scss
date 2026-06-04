@@ -1,0 +1,138 @@
+// Full-screen "analysing your tastes" loading experience.
+// Heartbeat logo over a slow-drifting neon background.
+
+.loading {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $bg-base;
+  overflow: hidden;
+}
+
+// --- Moving neon background -------------------------------------------------
+.loading-neon {
+  position: absolute;
+  inset: 0;
+  filter: blur(70px);
+  pointer-events: none;
+}
+
+.loading-blob {
+  position: absolute;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  opacity: 0.55;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+
+.loading-blob--violet {
+  top: 8%;
+  left: 12%;
+  background: radial-gradient(circle, rgba($violet-500, 0.9), transparent 70%);
+  animation: loading-drift-1 9s infinite ease-in-out;
+}
+
+.loading-blob--magenta {
+  top: 40%;
+  left: 45%;
+  background: radial-gradient(circle, rgba($magenta-500, 0.85), transparent 70%);
+  animation: loading-drift-2 11s infinite ease-in-out;
+}
+
+.loading-blob--blue {
+  top: 58%;
+  left: 8%;
+  background: radial-gradient(circle, rgba($blue-500, 0.85), transparent 70%);
+  animation: loading-drift-3 13s infinite ease-in-out;
+}
+
+// --- Logo + text ------------------------------------------------------------
+.loading-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $s-3;
+  text-align: center;
+}
+
+// Pulsing glow that beats in sync with the logo
+.loading-content::before {
+  content: "";
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba($violet-500, 0.45), transparent 70%);
+  filter: blur(30px);
+  transform: translate(-50%, -50%) scale(1);
+  animation: loading-glow-beat 1.4s infinite ease-in-out;
+  z-index: -1;
+}
+
+.loading-orb {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  animation: loading-heartbeat 1.4s infinite ease-in-out;
+  filter: drop-shadow(0 0 18px rgba($violet-500, 0.6));
+}
+
+.loading-text {
+  margin: 0;
+  font-family: $font-sans;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba($white, 0.85);
+}
+
+.loading-dots::after {
+  content: "";
+  animation: loading-dots 1.4s steps(1, end) infinite;
+}
+
+// --- Keyframes --------------------------------------------------------------
+@keyframes loading-heartbeat {
+  0%   { transform: scale(1); }
+  14%  { transform: scale(1.18); }
+  28%  { transform: scale(1); }
+  42%  { transform: scale(1.12); }
+  56%  { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes loading-glow-beat {
+  0%, 28%, 56%, 100% { transform: translate(-50%, -50%) scale(1);    opacity: 0.45; }
+  14%                { transform: translate(-50%, -50%) scale(1.25); opacity: 0.9; }
+  42%                { transform: translate(-50%, -50%) scale(1.15); opacity: 0.7; }
+}
+
+@keyframes loading-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(50px, 40px) scale(1.25); }
+}
+
+@keyframes loading-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1.1); }
+  50%      { transform: translate(-60px, 30px) scale(0.9); }
+}
+
+@keyframes loading-drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(0.95); }
+  50%      { transform: translate(40px, -50px) scale(1.2); }
+}
+
+@keyframes loading-dots {
+  0%   { content: ""; }
+  25%  { content: "."; }
+  50%  { content: ".."; }
+  75%  { content: "..."; }
+}

@@ -78,4 +78,5 @@ Rails.application.configure do
   # config.generators.apply_rubocop_autocorrect_after_generate!
 
   config.hosts << "sprout-seltzer-stopping.ngrok-free.dev"
+  config.hosts << "slather-polio-turbojet.ngrok-free.dev"
 end

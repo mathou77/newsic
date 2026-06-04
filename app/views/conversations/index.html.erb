@@ -1,0 +1,44 @@
+<div class="messaging-page">
+  <h1 class="page-title">Messages</h1>
+
+  <% if @pending.any? %>
+    <section class="requests">
+      <h2 class="requests__title">Demandes d'amis</h2>
+      <% @pending.each do |friendship| %>
+        <div class="request-row">
+          <div class="request-row__main">
+            <span class="user-row__avatar"><%= avatar_for(friendship.requester, size: 44) %></span>
+            <span class="user-row__name"><%= friendship.requester.display_name %></span>
+          </div>
+          <div class="friend-actions">
+            <%= button_to "Accepter", friendship_path(friendship), method: :patch,
+                          class: "btn-friend btn-friend--primary" %>
+            <%= button_to "Refuser", friendship_path(friendship), method: :delete,
+                          class: "btn-friend btn-friend--ghost" %>
+          </div>
+        </div>
+      <% end %>
+    </section>
+  <% end %>
+
+  <% if @conversations.empty? %>
+    <p class="empty-state">Aucune conversation. <%= link_to "Trouve des amis", users_path %> pour commencer à discuter.</p>
+  <% else %>
+    <ul class="conversation-list">
+      <% @conversations.each do |conversation| %>
+        <% other = conversation.other_than(current_user) %>
+        <li>
+          <%= link_to conversation_path(conversation), class: "conversation-row" do %>
+            <span class="user-row__avatar"><%= avatar_for(other, size: 52) %></span>
+            <span class="conversation-row__info">
+              <span class="conversation-row__name"><%= other.display_name %></span>
+              <span class="conversation-row__preview">
+                <%= conversation.last_message&.body&.truncate(40) || "Démarrez la conversation" %>
+              </span>
+            </span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>

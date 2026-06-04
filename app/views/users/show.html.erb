@@ -1,0 +1,30 @@
+<div class="profile-page">
+  <header class="profile-header">
+    <div class="profile-avatar"><%= avatar_for(@user, size: 96) %></div>
+    <h1 class="profile-name"><%= @user.display_name %></h1>
+
+    <%= render "users/friend_actions", user: @user, friendship: @friendship %>
+  </header>
+
+  <% if @user.top_genres.present? %>
+    <section class="profile-section">
+      <h2 class="profile-section__title">Genres préférés</h2>
+      <div class="tag-cloud">
+        <% @user.top_genres.each do |genre| %>
+          <span class="tag"><%= genre %></span>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <% if @user.top_artists.present? %>
+    <section class="profile-section">
+      <h2 class="profile-section__title">Artistes les plus écoutés</h2>
+      <ol class="artist-list">
+        <% @user.top_artists.each do |artist| %>
+          <li><%= artist %></li>
+        <% end %>
+      </ol>
+    </section>
+  <% end %>
+</div>

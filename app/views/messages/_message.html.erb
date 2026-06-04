@@ -1,0 +1,6 @@
+<%# Neutral bubble: alignment (mine vs theirs) is applied client-side by the
+    chat controller, because Turbo broadcasts render this without a current_user. %>
+<div class="msg" data-sender-id="<%= message.user_id %>" id="<%= dom_id(message) %>">
+  <div class="msg__bubble"><%= message.body %></div>
+  <div class="msg__time"><%= message.created_at.strftime("%H:%M") %></div>
+</div>

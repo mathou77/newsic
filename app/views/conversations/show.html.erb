@@ -1,0 +1,22 @@
+<% content_for :no_bottom_nav, true %>
+
+<div class="chat-page"
+     data-controller="chat"
+     data-chat-current-user-id-value="<%= current_user.id %>">
+
+  <%= turbo_stream_from @conversation %>
+
+  <header class="chat-header">
+    <%= link_to conversations_path, class: "chat-header__back" do %>‹<% end %>
+    <span class="user-row__avatar"><%= avatar_for(@other, size: 40) %></span>
+    <span class="chat-header__name"><%= @other.display_name %></span>
+  </header>
+
+  <div id="messages" class="chat-messages" data-chat-target="messages">
+    <% @messages.each do |message| %>
+      <%= render "messages/message", message: message %>
+    <% end %>
+  </div>
+
+  <%= render "messages/form", conversation: @conversation, message: @message %>
+</div>

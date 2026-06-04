@@ -1,0 +1,44 @@
+<div class="profile-page">
+  <header class="profile-header">
+    <div class="profile-avatar"><%= avatar_for(@user, size: 96) %></div>
+    <h1 class="profile-name"><%= @user.display_name %></h1>
+
+    <div class="profile-stats">
+      <div class="profile-stat">
+        <span class="profile-stat__num"><%= @playlist_count %></span>
+        <span class="profile-stat__label">Sessions</span>
+      </div>
+      <div class="profile-stat">
+        <span class="profile-stat__num"><%= @friend_count %></span>
+        <span class="profile-stat__label">Amis</span>
+      </div>
+    </div>
+  </header>
+
+  <% if @user.top_genres.present? %>
+    <section class="profile-section">
+      <h2 class="profile-section__title">Genres préférés</h2>
+      <div class="tag-cloud">
+        <% @user.top_genres.each do |genre| %>
+          <span class="tag"><%= genre %></span>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <% if @user.top_artists.present? %>
+    <section class="profile-section">
+      <h2 class="profile-section__title">Artistes les plus écoutés</h2>
+      <ol class="artist-list">
+        <% @user.top_artists.each do |artist| %>
+          <li><%= artist %></li>
+        <% end %>
+      </ol>
+    </section>
+  <% end %>
+
+  <section class="profile-section">
+    <%= link_to "Trouver des amis", users_path, class: "profile-action" %>
+    <%= button_to "Se déconnecter", logout_path, method: :delete, class: "profile-action profile-action--ghost" %>
+  </section>
+</div>
