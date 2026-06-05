@@ -1,3 +1,4 @@
+
 <div class="recap-container">
 
   <% if @liked_playlists.any? %>
@@ -27,6 +28,20 @@
     </div>
   <% end %>
 
-  <%= link_to "Recommencer", suggestions_path, class: "btn-recap" %>
-  <%= button_to "Ajouter à Spotify", save_to_spotify_suggestion_path(@suggestion), method: :post, class: "btn-spotify" %>
+
+
+  <div data-controller="spotify-save" style="margin-top: 30px;">
+    <div data-spotify-save-target="button">
+      <%= button_to "Ajouter à Spotify", save_to_spotify_suggestion_path(@suggestion),
+          method: :post,
+          class: "btn-spotify",
+          form: { data: { action: "submit->spotify-save#save" } } %>
+    </div>
+    <div data-spotify-save-target="confirmation" class="recap-notice d-none">
+      🎧 Titres ajoutés à ta playlist Newsic sur Spotify !
+    </div>
+  </div>
+
+   <%= link_to "Recommencer", suggestions_path, class: "btn-recap" %>
+
 </div>
