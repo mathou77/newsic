@@ -55,11 +55,24 @@ class SuggestionsController < ApplicationController
 
             # find_or_initialize + save pour toujours mettre à jour l'URL (qui expire)
             song = Song.find_or_initialize_by(deezer_id: result["id"])
-            song.title       = title
-            song.artist      = artist
-            song.preview_url = result["preview"]
-            song.image_url   = result.dig("album", "cover_big")
+
+            song.title          = result["title"].presence || title
+            song.artist         = result.dig("artist", "name").presence || artist
+            song.preview_url    = result["preview"]
+            song.image_url      = result.dig("album", "cover_big")
+            song.album_name     = result.dig("album", "title")
+            song.duration       = result["duration"]
+            song.explicit       = result["explicit_lyrics"]
+            song.rank           = result["rank"]
+            song.artist_picture = result.dig("artist", "picture_medium")
+
             song.spotify_id = spotify.search_track_id(artist: artist, title: title) if song.spotify_id.blank?
+
+            if song.release_date.blank?
+              details = deezer.track(result["id"])
+              song.release_date = details["release_date"]
+            end
+
             song.save!
 
             suggestion.playlists.create!(song: song, status: :pending)
