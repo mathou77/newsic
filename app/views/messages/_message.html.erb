@@ -1,6 +1,36 @@
-<%# Neutral bubble: alignment (mine vs theirs) is applied client-side by the
-    chat controller, because Turbo broadcasts render this without a current_user. %>
+<%# Neutral bubble (alignment applied client-side by the chat controller, since
+    Turbo broadcasts render this without a current_user). Carries text and/or a
+    shared track card. %>
 <div class="msg" data-sender-id="<%= message.user_id %>" id="<%= dom_id(message) %>">
-  <div class="msg__bubble"><%= message.body %></div>
+  <% if message.shared_track? && message.song %>
+    <% song = message.song %>
+    <div class="track-card">
+      <%= link_to song_path(song), class: "track-card__open", data: { turbo_frame: "_top" } do %>
+        <% if song.image_url.present? %>
+          <img class="track-card__cover" src="<%= song.image_url %>" alt="">
+        <% else %>
+          <span class="track-card__cover track-card__cover--ph">♪</span>
+        <% end %>
+        <span class="track-card__info">
+          <span class="track-card__title"><%= song.title %></span>
+          <span class="track-card__artist"><%= song.artist %></span>
+          <% if song.genre.present? %><span class="track-card__meta"><%= song.genre %></span><% end %>
+        </span>
+      <% end %>
+      <% if song.preview_url.present? %>
+        <span class="track-card__play" data-controller="preview">
+          <audio data-preview-target="audio" src="<%= song.preview_url %>" preload="none"></audio>
+          <button type="button" class="track-play" data-action="preview#toggle" data-preview-target="button"><i class="fa-solid fa-play"></i></button>
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if message.body.present? %>
+    <div class="msg__bubble"><%= message.body %></div>
+  <% end %>
+
   <div class="msg__time"><%= message.created_at.strftime("%H:%M") %></div>
+
+  <%= render "messages/reactions", message: message %>
 </div>

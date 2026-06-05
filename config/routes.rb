@@ -28,6 +28,11 @@ Rails.application.routes.draw do
   resources :conversations, only: [:index, :show, :create] do
     resources :messages, only: [:create]
   end
+  resources :messages, only: [] do
+    resources :reactions, only: [:create], controller: "message_reactions"
+  end
+  resources :songs, only: [:show]
+  resources :shares, only: [:create]
 
 
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)

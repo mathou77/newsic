@@ -4,6 +4,7 @@ class ConversationsController < ApplicationController
   def index
     ids = Conversation.where("user1_id = :id OR user2_id = :id", id: current_user.id)
     @conversations = ids.includes(:messages).sort_by { |c| c.updated_at }.reverse
+    @friends = current_user.friends
     @pending = current_user.pending_received.includes(:requester)
   end
 
