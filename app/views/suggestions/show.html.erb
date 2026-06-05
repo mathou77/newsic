@@ -3,12 +3,7 @@
   <button type="button" class="filters-toggle" id="filters-toggle">🎚️ Filtres</button>
 
   <div class="filters-panel" id="filters-panel">
-      <button
-        type="button"
-        class="filters-close"
-        id="filters-close">
-        ×
-      </button>
+    <button type="button" class="filters-close" id="filters-close">×</button>
 
     <%= form_with url: suggestions_path, method: :post, data: { turbo: false }, class: "filters-form" do %>
       <div class="seed-search"
@@ -84,14 +79,17 @@
           <%= check_box_tag :clean_only, "1", @filters[:clean_only] %>
           Version clean uniquement
         </label>
+
         <label class="switch">
           <%= check_box_tag :diverse, "1", @filters[:diverse] %>
           1 titre max par artiste
         </label>
+
         <label class="switch">
           <%= check_box_tag :discovery, "1", @filters[:discovery] %>
           Que des nouveautés (exclure mes artistes connus)
         </label>
+
         <label class="switch">
           <%= check_box_tag :exclude_liked, "1", @filters[:exclude_liked] %>
           Ne pas reproposer mes titres likés
@@ -109,6 +107,65 @@
              data-playlist-id="<%= playlist.id %>"
              data-vote-url="<%= vote_suggestion_playlist_path(@suggestion, playlist) %>">
 
+          <div class="flip-card-inner" onclick="flipCard(event, this)">
+            <div class="flip-card-front">
+              <img src="<%= playlist.song.image_url %>" alt="<%= playlist.song.title %>" class="card-cover">
+
+              <div class="card-info">
+                <h2><%= playlist.song.title %></h2>
+                <p><%= playlist.song.artist %></p>
+              </div>
+            </div>
+
+            <div class="flip-card-back">
+
+                <span class="back-label">
+                  Pourquoi cette reco ?
+                </span>
+
+                <h2><%= playlist.song.title %></h2>
+
+                <p class="back-artist">
+                  <%= playlist.song.artist %>
+                </p>
+
+                <div class="song-insight-box">
+                  <p>
+                    Sélectionné à partir de tes écoutes Spotify pour te faire découvrir un titre proche de ton univers musical.
+                  </p>
+                </div>
+
+                <div class="song-facts">
+
+                  <% if playlist.song.album_name.present? %>
+                    <p>
+                      💿 Issu de l'album
+                      <strong><%= playlist.song.album_name %></strong>
+                    </p>
+                  <% end %>
+
+                  <% if playlist.song.duration.present? %>
+                    <p>
+                      ⏱️ Durée :
+                      <strong>
+                        <%= playlist.song.duration / 60 %>:<%= "%02d" % (playlist.song.duration % 60) %>
+                      </strong>
+                    </p>
+                  <% end %>
+
+                  <% if playlist.song.rank.present? %>
+                    <p>
+                      🎵 Recommandé parmi les titres les plus pertinents trouvés pour toi.
+                    </p>
+                  <% end %>
+
+                </div>
+
+                <p class="flip-help">
+                  Clique pour revenir à la pochette
+                </p>
+
+              </div>
           <div class="card-actions">
             <button type="button" class="card-action" data-action="share-sheet#open"
                     data-song-id="<%= playlist.song.id %>" aria-label="Partager">
@@ -121,9 +178,6 @@
 
           <img src="<%= playlist.song.image_url %>" alt="<%= playlist.song.title %>" class="card-cover">
 
-          <div class="card-info">
-            <h2><%= playlist.song.title %></h2>
-            <p><%= playlist.song.artist %></p>
           </div>
 
           <audio class="card-audio" src="<%= playlist.song.preview_url %>" preload="auto"></audio>
@@ -137,7 +191,6 @@
     </div>
 
     <div class="swipe-hint">← dislike &nbsp;&nbsp; like →</div>
-
   <% else %>
     <div class="done-screen">
       <h2>That's it! 🎉</h2>
@@ -185,8 +238,6 @@
   <div class="toast" data-share-sheet-target="toast" hidden>Partagé !</div>
 </div>
 
-<!-- Overlay tap-to-start : résout le blocage autoplay navigateur.
-     Affiché uniquement s'il y a des cartes (sinon il masquerait le menu de filtres). -->
 <% if @playlists.any? %>
   <div id="tap-overlay" class="tap-overlay">
     <div class="tap-overlay__content">
@@ -197,31 +248,40 @@
 <% end %>
 
 <script>
-  // Wrapped in an IIFE and bound to `turbo:load` so it stays reliable across
-  // Turbo navigations (no global `const` re-declaration, listeners re-attach
-  // on every page render). Runs its setup only once per rendered page.
   (function () {
     if (window.__newsicSwipe) return;
     window.__newsicSwipe = true;
     window.__newsicAudioUnlocked = false;
 
     function playCurrentAudio() {
-      document.querySelectorAll('.card-audio').forEach(a => { a.pause(); a.currentTime = 0; });
+      document.querySelectorAll('.card-audio').forEach(a => {
+        a.pause();
+        a.currentTime = 0;
+      });
+
       const active = document.querySelector('.swipe-card.active');
       if (active) active.querySelector('.card-audio').play().catch(() => {});
     }
 
     function unlockAudio() {
       if (window.__newsicAudioUnlocked) return;
+
       window.__newsicAudioUnlocked = true;
+
       const overlay = document.getElementById('tap-overlay');
       if (overlay) overlay.style.display = 'none';
+
       playCurrentAudio();
     }
 
-    // Referenced by inline onclick="vote(...)" → must be global.
+    window.flipCard = function (event, element) {
+      if (event.target.closest('.swipe-buttons')) return;
+      element.classList.toggle('is-flipped');
+    };
+
     window.vote = function (btn, status) {
       unlockAudio();
+
       const card = btn.closest('.swipe-card');
       const container = document.querySelector('.swipe-container');
       const recapUrl = container ? container.dataset.recapUrl : '/';
@@ -239,7 +299,9 @@
 
       setTimeout(() => {
         card.remove();
+
         const remaining = document.querySelectorAll('.swipe-card');
+
         if (remaining.length === 0) {
           window.location.href = recapUrl;
         } else {
@@ -249,46 +311,50 @@
       }, 400);
     };
 
-    // Swipe tactile (bound once on document)
     let startX = 0;
-    document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
+
+    document.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+    });
+
     document.addEventListener('touchend', e => {
       const diff = e.changedTouches[0].clientX - startX;
       const active = document.querySelector('.swipe-card.active');
+
       if (!active) return;
-      if (diff > 80)  window.vote(active.querySelector('.btn-like'), 'liked');
+
+      if (diff > 80) window.vote(active.querySelector('.btn-like'), 'liked');
       if (diff < -80) window.vote(active.querySelector('.btn-dislike'), 'disliked');
     });
 
-    // Per-page setup — runs once for each freshly rendered show page.
     function initPage() {
       const container = document.querySelector('.swipe-container');
       if (!container || container.dataset.swipeReady === '1') return;
+
       container.dataset.swipeReady = '1';
 
       const overlay = document.getElementById('tap-overlay');
       if (overlay) overlay.addEventListener('click', unlockAudio);
 
-      // Ouverture / fermeture du panneau de filtres
       const filtersToggle = document.getElementById('filters-toggle');
       const filtersPanel  = document.getElementById('filters-panel');
       const filtersClose  = document.getElementById('filters-close');
+
       if (filtersToggle && filtersPanel) {
         filtersToggle.addEventListener('click', () => filtersPanel.classList.add('open'));
       }
+
       if (filtersClose && filtersPanel) {
         filtersClose.addEventListener('click', () => filtersPanel.classList.remove('open'));
       }
 
-      // Tentative autoplay silencieuse (marche si le navigateur l'autorise)
       const active = document.querySelector('.swipe-card.active');
+
       if (active) {
         active.querySelector('.card-audio').play().then(() => {
           window.__newsicAudioUnlocked = true;
           if (overlay) overlay.style.display = 'none';
-        }).catch(() => {
-          // Bloqué par le navigateur → l'overlay reste visible
-        });
+        }).catch(() => {});
       }
 
       initSeedSearch();
@@ -297,94 +363,131 @@
     document.addEventListener('turbo:load', initPage);
     document.addEventListener('DOMContentLoaded', initPage);
 
-  // ── Recherche d'artistes / sons (graines) ──────────────
-  function initSeedSearch() {
-    const root = document.getElementById('seed-search');
-    if (!root) return;
+    function initSeedSearch() {
+      const root = document.getElementById('seed-search');
+      if (!root) return;
 
-    const searchUrl = root.dataset.searchUrl;
-    const input     = document.getElementById('seed-input');
-    const resultsEl = document.getElementById('seed-results');
-    const chipsEl   = document.getElementById('seed-chips');
-    const inputsEl  = document.getElementById('seed-inputs');
+      const searchUrl = root.dataset.searchUrl;
+      const input     = document.getElementById('seed-input');
+      const resultsEl = document.getElementById('seed-results');
+      const chipsEl   = document.getElementById('seed-chips');
+      const inputsEl  = document.getElementById('seed-inputs');
 
-    // seeds : { kind: 'artist' | 'track', value, label }
-    let seeds = [];
-    JSON.parse(root.dataset.initialArtists || '[]').forEach(name => {
-      seeds.push({ kind: 'artist', value: name, label: name });
-    });
-    JSON.parse(root.dataset.initialTracks || '[]').forEach(entry => {
-      const [artist, title] = entry.split('|');
-      seeds.push({ kind: 'track', value: entry, label: title + ' — ' + artist });
-    });
+      let seeds = [];
 
-    function render() {
-      chipsEl.innerHTML = '';
-      inputsEl.innerHTML = '';
-      seeds.forEach((s, i) => {
-        const chip = document.createElement('span');
-        chip.className = 'seed-chip';
-        const txt = document.createElement('span');
-        txt.textContent = (s.kind === 'artist' ? '🎤 ' : '🎵 ') + s.label;
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.textContent = '×';
-        btn.addEventListener('click', () => { seeds.splice(i, 1); render(); });
-        chip.append(txt, btn);
-        chipsEl.appendChild(chip);
-
-        const hidden = document.createElement('input');
-        hidden.type = 'hidden';
-        hidden.name = s.kind === 'artist' ? 'seed_artists[]' : 'seed_tracks[]';
-        hidden.value = s.value;
-        inputsEl.appendChild(hidden);
+      JSON.parse(root.dataset.initialArtists || '[]').forEach(name => {
+        seeds.push({ kind: 'artist', value: name, label: name });
       });
-    }
 
-    function addSeed(seed) {
-      const dup = seeds.some(s => s.kind === seed.kind && s.value.toLowerCase() === seed.value.toLowerCase());
-      if (!dup) { seeds.push(seed); render(); }
-      input.value = '';
-      resultsEl.innerHTML = '';
-    }
-
-    function resultRow(emoji, text, seed) {
-      const row = document.createElement('div');
-      row.className = 'seed-result';
-      row.textContent = emoji + ' ' + text;
-      row.addEventListener('click', () => addSeed(seed));
-      return row;
-    }
-
-    function renderResults(data) {
-      resultsEl.innerHTML = '';
-      (data.artists || []).forEach(a => {
-        resultsEl.appendChild(resultRow('🎤', a.name, { kind: 'artist', value: a.name, label: a.name }));
+      JSON.parse(root.dataset.initialTracks || '[]').forEach(entry => {
+        const [artist, title] = entry.split('|');
+        seeds.push({ kind: 'track', value: entry, label: title + ' — ' + artist });
       });
-      (data.tracks || []).forEach(t => {
-        const label = t.title + ' — ' + t.artist;
-        resultsEl.appendChild(resultRow('🎵', label, { kind: 'track', value: t.artist + '|' + t.title, label }));
+
+      function render() {
+        chipsEl.innerHTML = '';
+        inputsEl.innerHTML = '';
+
+        seeds.forEach((s, i) => {
+          const chip = document.createElement('span');
+          chip.className = 'seed-chip';
+
+          const txt = document.createElement('span');
+          txt.textContent = (s.kind === 'artist' ? '🎤 ' : '🎵 ') + s.label;
+
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = '×';
+          btn.addEventListener('click', () => {
+            seeds.splice(i, 1);
+            render();
+          });
+
+          chip.append(txt, btn);
+          chipsEl.appendChild(chip);
+
+          const hidden = document.createElement('input');
+          hidden.type = 'hidden';
+          hidden.name = s.kind === 'artist' ? 'seed_artists[]' : 'seed_tracks[]';
+          hidden.value = s.value;
+
+          inputsEl.appendChild(hidden);
+        });
+      }
+
+      function addSeed(seed) {
+        const dup = seeds.some(s => {
+          return s.kind === seed.kind && s.value.toLowerCase() === seed.value.toLowerCase();
+        });
+
+        if (!dup) {
+          seeds.push(seed);
+          render();
+        }
+
+        input.value = '';
+        resultsEl.innerHTML = '';
+      }
+
+      function resultRow(emoji, text, seed) {
+        const row = document.createElement('div');
+        row.className = 'seed-result';
+        row.textContent = emoji + ' ' + text;
+        row.addEventListener('click', () => addSeed(seed));
+        return row;
+      }
+
+      function renderResults(data) {
+        resultsEl.innerHTML = '';
+
+        (data.artists || []).forEach(a => {
+          resultsEl.appendChild(
+            resultRow('🎤', a.name, { kind: 'artist', value: a.name, label: a.name })
+          );
+        });
+
+        (data.tracks || []).forEach(t => {
+          const label = t.title + ' — ' + t.artist;
+
+          resultsEl.appendChild(
+            resultRow('🎵', label, {
+              kind: 'track',
+              value: t.artist + '|' + t.title,
+              label: label
+            })
+          );
+        });
+      }
+
+      let timer = null;
+
+      input.addEventListener('input', () => {
+        clearTimeout(timer);
+
+        const q = input.value.trim();
+
+        if (q.length < 2) {
+          resultsEl.innerHTML = '';
+          return;
+        }
+
+        timer = setTimeout(() => {
+          fetch(searchUrl + '?q=' + encodeURIComponent(q), {
+            headers: { 'Accept': 'application/json' }
+          })
+            .then(r => r.json())
+            .then(renderResults)
+            .catch(() => {
+              resultsEl.innerHTML = '';
+            });
+        }, 300);
       });
+
+      document.addEventListener('click', e => {
+        if (!root.contains(e.target)) resultsEl.innerHTML = '';
+      });
+
+      render();
     }
-
-    let timer = null;
-    input.addEventListener('input', () => {
-      clearTimeout(timer);
-      const q = input.value.trim();
-      if (q.length < 2) { resultsEl.innerHTML = ''; return; }
-      timer = setTimeout(() => {
-        fetch(searchUrl + '?q=' + encodeURIComponent(q), { headers: { 'Accept': 'application/json' } })
-          .then(r => r.json())
-          .then(renderResults)
-          .catch(() => { resultsEl.innerHTML = ''; });
-      }, 300);
-    });
-
-    document.addEventListener('click', e => {
-      if (!root.contains(e.target)) resultsEl.innerHTML = '';
-    });
-
-    render();
-  }
   })();
 </script>

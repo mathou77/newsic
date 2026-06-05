@@ -283,6 +283,115 @@
   50%      { transform: scale(1.12); opacity: 1; }
 }
 
+
+// Flip card — card front/back animation
+.swipe-card {
+  perspective: 1000px;
+}
+
+.flip-card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transition: transform 0.7s ease;
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+.flip-card-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+}
+
+.flip-card-front {
+  display: flex;
+  flex-direction: column;
+}
+
+.flip-card-back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+  background: linear-gradient(180deg, #151326 0%, #0d0d18 100%);
+  color: white;
+  padding: 26px 24px 110px;
+  border-radius: 28px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.back-label {
+  display: inline-block;
+  width: fit-content;
+  margin-bottom: 14px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(124, 92, 255, 0.18);
+  border: 1px solid rgba(124, 92, 255, 0.45);
+  color: #cfc4ff;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.flip-card-back h2 {
+  margin: 0 0 8px;
+  font-size: 1.7rem;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.back-artist {
+  margin: 0 0 22px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.song-insight-box {
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.song-insight-box p {
+  margin: 0;
+  color: #e5e1f4;
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
+.song-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.song-facts p {
+  margin: 0;
+  color: #ded9ef;
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
+.song-facts strong {
+  color: white;
+  font-weight: 800;
+}
+
+.flip-help {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: #8f89a8;
+}
 // ── Recap page ──────────────────────────────────────────────────────────────
 
 .recap-container {
