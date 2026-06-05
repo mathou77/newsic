@@ -1,13 +1,82 @@
 .swipe-container {
   position: relative;
-  min-height: 100vh;
-  padding: 28px 24px 110px;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px 78px; // bottom clearance for the floating nav
   background:
     radial-gradient(circle at 50% 18%, rgba(76, 90, 255, 0.35), transparent 34%),
     radial-gradient(circle at 80% 45%, rgba(143, 76, 255, 0.22), transparent 32%),
     #050510;
   color: white;
   overflow: hidden;
+}
+
+// --- Discover header + mood tabs -------------------------------------------
+.discover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  margin-bottom: 6px;
+}
+.discover-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &__logo { width: 30px; height: 30px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(124, 92, 255, 0.6)); }
+  &__name { font-family: $headers-font; font-weight: 800; letter-spacing: 0.12em; font-size: 19px; color: $white; }
+}
+.discover-filters-btn {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 11px;
+  background: rgba($white, 0.06);
+  color: $white;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.discover-from {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  margin-bottom: 8px;
+
+  &__label { font-size: 11px; color: rgba($white, 0.5); }
+  &__mood  { font-size: 17px; font-weight: 800; color: #8b5cf6; }
+}
+
+.mood-tabs {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  flex: 0 0 auto;
+  margin-bottom: 10px;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+.mood-tab-form { margin: 0; flex: 0 0 auto; }
+.mood-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  height: 30px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba($white, 0.14);
+  background: rgba($white, 0.04);
+  color: rgba($white, 0.7);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &.is-active { color: $white; border-color: rgba(124, 92, 255, 0.9); background: rgba(124, 92, 255, 0.16); }
 }
 
 .filters-toggle {
@@ -25,41 +94,56 @@
 }
 
 .filters-panel {
-  position: absolute;
-  inset: 0;
-  z-index: 40;
-  padding: 80px 24px 32px;
-  background: rgba(0, 0, 0, 0.97);
-  backdrop-filter: blur(18px);
-  transform: translateY(-100%);
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100%;
+  max-width: 430px;
+  z-index: 70;
+  padding: 20px 20px 40px;
+  background: #050505;
+  transform: translateX(-50%) translateY(-100%);
   transition: transform 0.3s ease;
   overflow-y: auto;
 }
 
 .filters-panel.open {
-  transform: translateY(0);
+  transform: translateX(-50%) translateY(0);
 }
 
+.filters-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+
+  &__title { font-size: 18px; font-weight: 800; color: $white; }
+}
 .filters-close {
-  position: absolute;
-  top: 24px;
-  right: 24px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
   border: none;
   background: transparent;
-  color: white;
-  font-size: 36px;
-  line-height: 1;
+  color: $white;
+  font-size: 17px;
+  cursor: pointer;
+}
+.filters-reset {
+  border: none;
+  background: transparent;
+  color: #8b5cf6;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
 }
 
 .filters-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  background: #060608;
   color: $white;
-  border: 1px solid rgba($violet-500, 0.35);
-  border-radius: 28px;
-  padding: 28px 24px;
 }
 
 .filters-form label {
@@ -107,7 +191,9 @@
   position: relative;
   width: 100%;
   max-width: 340px;
-  height: 520px;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 540px;
   margin: 0 auto;
 }
 
@@ -134,19 +220,20 @@
 
 .card-cover {
   width: 100%;
-  height: 330px;
+  flex: 1 1 auto;
+  min-height: 0;
   object-fit: cover;
 }
 
 .card-info {
-  padding: 18px 20px;
-  flex: 1;
+  padding: 14px 18px;
+  flex: 0 0 auto;
 }
 
 .card-info h2 {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 800;
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -154,34 +241,77 @@
 }
 
 .card-info p {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.72);
   margin: 0;
 }
 
-.swipe-buttons {
+// Action buttons below the card (act on the active card).
+.swipe-actions {
   display: flex;
   justify-content: center;
-  gap: 58px;
-  padding: 0 24px 24px;
+  align-items: center;
+  gap: 36px;
+  flex: 0 0 auto;
+  margin-top: 14px;
 }
 
-.swipe-buttons button {
-  width: 66px;
-  height: 66px;
-  border-radius: 50%;
+.play-toggle {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
   border: none;
-  color: white;
-  font-size: 1.5rem;
+  border-radius: 50%;
   cursor: pointer;
+  color: #fff;
+  font-size: 1.4rem;
+  background: linear-gradient(135deg, #7c3aed, #ff2d8b);
+  box-shadow: 0 10px 28px rgba(124, 58, 237, 0.5);
+  transition: transform 0.12s ease, box-shadow 0.2s ease;
+
+  i { transform: translateX(0); }
+  i.fa-play { transform: translateX(2px); }
+
+  &:active { transform: scale(0.92); }
+
+  &.is-playing {
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.25), 0 10px 28px rgba(124, 58, 237, 0.5);
+  }
 }
 
-.btn-dislike {
-  background: #ff4d4d;
+.swipe-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  cursor: pointer;
+
+  i {
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    font-size: 1.3rem;
+  }
 }
 
-.btn-like {
-  background: #1db954;
+.btn-dislike i {
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.btn-like i {
+  color: #7c3aed;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(124, 92, 255, 0.5);
 }
 
 .swipe-card.fly-right {
@@ -195,10 +325,173 @@
 }
 
 .swipe-hint {
-  margin-top: 18px;
+  margin-top: 8px;
   text-align: center;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.55);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.45);
+  flex: 0 0 auto;
+}
+
+// ===========================================================================
+// Filters — pill / slider / surprise design
+// ===========================================================================
+$flt-violet: #7c3aed;
+
+.surprise-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 0;
+  width: 100%;
+  text-align: left;
+  padding: 16px 18px;
+  margin-bottom: 22px;
+  border-radius: 20px;
+  border: 1px solid rgba($flt-violet, 0.4);
+  background: linear-gradient(135deg, rgba($flt-violet, 0.35), rgba(124, 58, 237, 0.08));
+  color: $white;
+  cursor: pointer;
+
+  &__icon { grid-column: 1; font-size: 18px; color: #c4b5fd; }
+  &__title { grid-column: 1; font-size: 19px; font-weight: 800; }
+  &__sub { grid-column: 1; font-size: 13px; color: rgba($white, 0.6); }
+  &__chevron { grid-column: 2; grid-row: 1 / span 3; align-self: center; color: rgba($white, 0.6); }
+  &.is-active { border-color: $flt-violet; box-shadow: 0 0 24px rgba($flt-violet, 0.4); }
+}
+
+.filters-section {
+  margin-bottom: 22px;
+
+  &__head { display: flex; align-items: center; justify-content: space-between; }
+  &__title { font-size: 17px; font-weight: 800; color: $white; margin: 0 0 10px; }
+  &__hint { font-size: 12px; color: rgba($white, 0.5); margin: -4px 0 10px; }
+}
+.seed-counter { font-size: 13px; color: rgba($white, 0.55); font-weight: 700; }
+
+.pill-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+  &--wrap { flex-wrap: wrap; overflow: visible; }
+}
+
+.filter-pill {
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  border-radius: 13px;
+  border: 1px solid rgba($white, 0.14);
+  background: rgba($white, 0.04);
+  color: rgba($white, 0.75);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &.is-active { color: $white; border-color: transparent; background: $flt-violet; }
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: rgba($white, 0.7);
+  margin-bottom: 10px;
+}
+.fine-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, $flt-violet, rgba($white, 0.15));
+  outline: none;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: $white; box-shadow: 0 0 14px rgba($flt-violet, 0.8); cursor: pointer;
+  }
+  &::-moz-range-thumb {
+    width: 22px; height: 22px; border: none; border-radius: 50%;
+    background: $white; box-shadow: 0 0 14px rgba($flt-violet, 0.8); cursor: pointer;
+  }
+}
+
+.btn-start-swiping {
+  width: 100%;
+  margin-top: 8px;
+  padding: 17px;
+  border: none;
+  border-radius: 18px;
+  font-size: 16px;
+  font-weight: 800;
+  color: $white;
+  background: linear-gradient(135deg, $flt-violet, #9333ea);
+  box-shadow: 0 10px 30px rgba($flt-violet, 0.5);
+  cursor: pointer;
+}
+
+// Seed search (build your vibe) with covers/photos
+.seed-input-wrap { position: relative; }
+.seed-chips { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.seed-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 6px 6px;
+  border-radius: 14px;
+  background: rgba($white, 0.06);
+  border: 1px solid rgba($white, 0.12);
+
+  &__thumb {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background-size: cover; background-position: center;
+    display: grid; place-items: center; font-size: 14px;
+    background-color: rgba($white, 0.1); flex: 0 0 auto;
+    &--round { border-radius: 50%; }
+  }
+  &__label { font-size: 13px; font-weight: 600; color: $white; }
+  &__remove { border: none; background: transparent; color: rgba($white, 0.6); font-size: 16px; cursor: pointer; }
+}
+
+.seed-results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 260px;
+  overflow-y: auto;
+  background: #0d0b16;
+  border: 1px solid rgba($white, 0.12);
+  border-radius: 14px;
+  padding: 6px;
+}
+.seed-result {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  &:hover { background: rgba($white, 0.06); }
+
+  &__thumb {
+    width: 44px; height: 44px;
+    border-radius: 8px;
+    background-size: cover; background-position: center;
+    background-color: rgba($white, 0.1);
+    display: grid; place-items: center; font-size: 16px; flex: 0 0 auto;
+    &--round { border-radius: 50%; }
+  }
+  &__label { flex: 1; font-size: 14px; color: $white; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &__add { width: 34px; height: 34px; flex: 0 0 auto; border: none; border-radius: 50%; background: $flt-violet; color: $white; font-size: 14px; cursor: pointer; }
 }
 
 
@@ -320,10 +613,11 @@
   transform: rotateY(180deg);
   background: linear-gradient(180deg, #151326 0%, #0d0d18 100%);
   color: white;
-  padding: 26px 24px 110px;
+  padding: 26px 24px 28px;
   border-radius: 28px;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   overflow-y: auto;
 }
 
