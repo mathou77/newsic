@@ -1,4 +1,4 @@
-<div class="onboarding-page">
+<div class="onboarding-page home-page">
   <div class="brand">
     <%= image_tag "logo-orb.png", class: "brand-logo", alt: "Newsic" %>
     <div>
@@ -9,13 +9,16 @@
 
   <div class="onboarding-content">
     <% if session[:access_token] %>
-      <p class="welcome-text">Bonjour <%= session[:display_name] %> !</p>
+      <% if current_user&.avatar_url.present? %>
+        <img src="<%= current_user.avatar_url %>" alt="avatar" class="home-avatar">
+      <% end %>
+      <p class="welcome-text">Bonjour <%= session[:display_name]&.split&.first %> !</p>
 
       <h2>Prêt·e à découvrir de nouveaux sons ?</h2>
 
-      <%= link_to "Commencer la découverte", "#", class: "start-button" %>
-
-      <%= button_to "Se déconnecter", logout_path, method: :delete, class: "logout-button" %>
+      <div class="home-cta">
+        <p class="home-cta-label">Tape sur le logo ci-dessous pour commencer</p>
+      </div>
     <% else %>
       <h2>Connectez-vous pour découvrir de nouveaux sons</h2>
 
@@ -26,8 +29,4 @@
     <% end %>
   </div>
 
-  <div class="onboarding-help">
-    <p>Un problème avec la connexion Spotify ?</p>
-    <%= link_to "Obtenir de l’aide", "#" %>
-  </div>
 </div>
