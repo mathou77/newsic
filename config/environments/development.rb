@@ -79,4 +79,6 @@ Rails.application.configure do
 
   config.hosts << "sprout-seltzer-stopping.ngrok-free.dev"
   config.hosts << "slather-polio-turbojet.ngrok-free.dev"
+  config.hosts << "clumsy-hull-dreamland.ngrok-free.dev"
 end
+
