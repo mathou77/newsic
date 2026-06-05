@@ -392,3 +392,134 @@
   font-size: 0.82rem;
   color: #8f89a8;
 }
+// ── Recap page ──────────────────────────────────────────────────────────────
+
+.recap-container {
+  min-height: 100vh;
+  padding: 28px 20px 140px;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(76, 90, 255, 0.35), transparent 34%),
+    radial-gradient(circle at 80% 45%, rgba(143, 76, 255, 0.22), transparent 32%),
+    #050510;
+  color: white;
+}
+
+.recap-banner {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  margin-bottom: 28px;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, rgba(76, 90, 255, 0.25), rgba(143, 76, 255, 0.25));
+  border: 1px solid rgba(124, 92, 255, 0.5);
+  border-radius: 20px;
+  box-shadow: 0 0 30px rgba(124, 92, 255, 0.2);
+}
+
+.recap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.recap-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0; // empêche le débordement de la colonne droite
+}
+
+.recap-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(124, 92, 255, 0.3);
+}
+
+.recap-cover--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(124, 92, 255, 0.15);
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.recap-info {
+  width: 100%;
+  text-align: center;
+}
+
+.recap-artist {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.recap-title {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-recap {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  text-align: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #4c5aff, #8f4cff);
+  color: white;
+  font-weight: 800;
+  font-size: 1rem;
+  text-decoration: none;
+  margin-bottom: 12px;
+  box-shadow: 0 6px 20px rgba(76, 90, 255, 0.4);
+
+  &:hover {
+    background: linear-gradient(135deg, #3a48e0, #7a3de0);
+    color: white;
+  }
+}
+
+.btn-spotify {
+  display: block;
+  margin-bottom: 16px;
+  width: 100%;
+  padding: 16px;
+  text-align: center;
+  border-radius: 999px;
+  background: #1db954;
+  color: white;
+  border: none;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(29, 185, 84, 0.35);
+
+  &:hover { background: #17a349; }
+}
+
+.recap-notice {
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 10px 16px;
+  margin: -10px 14px 14px;
+  background: rgba(29, 185, 84, 0.1);
+  border: 1px solid rgba(29, 185, 84, 0.25);
+  border-radius: 12px;
+  color: rgba(29, 185, 84, 0.85);
+  letter-spacing: 0.02em;
+}

@@ -96,3 +96,24 @@
       inset 0 1px 1px rgba($white, 0.22);
   }
 }
+
+body:has(.home-page) .bottom-nav-center {
+  animation: nav-glow 1.8s infinite ease-in-out;
+}
+
+@keyframes nav-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1.5px rgba($violet-500, 0.65),
+      0 0 22px rgba($violet-500, 0.55),
+      0 10px 26px rgba(0, 0, 0, 0.55),
+      inset 0 1px 1px rgba($white, 0.18);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba($violet-500, 0.9),
+      0 0 32px rgba($violet-500, 0.9),
+      0 10px 26px rgba(0, 0, 0, 0.55),
+      inset 0 1px 1px rgba($white, 0.18);
+  }
+}

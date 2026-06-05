@@ -1,9 +1,78 @@
-<div class="messaging-page">
-  <h1 class="page-title">Messages</h1>
+<div class="messaging-page" data-controller="tabs">
+  <header class="msg-header">
+    <%= link_to profile_path, class: "msg-header__icon" do %><i class="fa-solid fa-bars"></i><% end %>
+    <div class="msg-brand">
+      <%= image_tag "logo-orb.png", class: "msg-brand__logo", alt: "Newsic" %>
+      <span class="msg-brand__name">NEWSIC</span>
+      <span class="msg-brand__tagline">Discover, share &amp; vibe</span>
+    </div>
+    <%= link_to users_path, class: "msg-header__icon" do %><i class="fa-solid fa-plus"></i><% end %>
+  </header>
 
-  <% if @pending.any? %>
-    <section class="requests">
-      <h2 class="requests__title">Demandes d'amis</h2>
+  <nav class="msg-tabs">
+    <button class="msg-tab is-active" data-tabs-target="tab" data-tab="all" data-action="tabs#select">All</button>
+    <button class="msg-tab" data-tabs-target="tab" data-tab="friends" data-action="tabs#select">
+      Friends <% if @friends.any? %><span class="msg-tab__badge"><%= @friends.size %></span><% end %>
+    </button>
+    <button class="msg-tab" data-tabs-target="tab" data-tab="requests" data-action="tabs#select">
+      Requests <% if @pending.any? %><span class="msg-tab__badge msg-tab__badge--alert"><%= @pending.size %></span><% end %>
+    </button>
+  </nav>
+
+  <%# --- All: conversations --- %>
+  <section data-tabs-target="panel" data-tab="all">
+    <% if @conversations.empty? %>
+      <p class="empty-state">Aucune conversation. <%= link_to "Trouve des amis", users_path %> pour commencer.</p>
+    <% else %>
+      <ul class="conversation-list">
+        <% @conversations.each do |conversation| %>
+          <% other = conversation.other_than(current_user) %>
+          <li>
+            <%= link_to conversation_path(conversation), class: "conversation-row" do %>
+              <span class="user-row__avatar"><%= avatar_for(other, size: 52) %></span>
+              <span class="conversation-row__info">
+                <span class="conversation-row__name"><%= other.display_name %></span>
+                <span class="conversation-row__preview">
+                  <% last = conversation.last_message %>
+                  <% if last&.shared_track? %>
+                    🎵 <%= last.song&.title %>
+                  <% else %>
+                    <%= last&.body&.truncate(40) || "Démarrez la conversation" %>
+                  <% end %>
+                </span>
+              </span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+
+  <%# --- Friends --- %>
+  <section data-tabs-target="panel" data-tab="friends" hidden>
+    <% if @friends.empty? %>
+      <p class="empty-state">Pas encore d'amis. <%= link_to "Trouves-en", users_path %> avec leur code !</p>
+    <% else %>
+      <ul class="user-list">
+        <% @friends.each do |friend| %>
+          <li class="user-row">
+            <%= link_to user_path(friend), class: "user-row__main" do %>
+              <span class="user-row__avatar"><%= avatar_for(friend, size: 48) %></span>
+              <span class="user-row__info"><span class="user-row__name"><%= friend.display_name %></span></span>
+            <% end %>
+            <%= button_to "Message", conversations_path, params: { user_id: friend.id },
+                          class: "btn-friend btn-friend--primary" %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+
+  <%# --- Requests --- %>
+  <section data-tabs-target="panel" data-tab="requests" hidden>
+    <% if @pending.empty? %>
+      <p class="empty-state">Aucune demande en attente.</p>
+    <% else %>
       <% @pending.each do |friendship| %>
         <div class="request-row">
           <div class="request-row__main">
@@ -18,27 +87,6 @@
           </div>
         </div>
       <% end %>
-    </section>
-  <% end %>
-
-  <% if @conversations.empty? %>
-    <p class="empty-state">Aucune conversation. <%= link_to "Trouve des amis", users_path %> pour commencer à discuter.</p>
-  <% else %>
-    <ul class="conversation-list">
-      <% @conversations.each do |conversation| %>
-        <% other = conversation.other_than(current_user) %>
-        <li>
-          <%= link_to conversation_path(conversation), class: "conversation-row" do %>
-            <span class="user-row__avatar"><%= avatar_for(other, size: 52) %></span>
-            <span class="conversation-row__info">
-              <span class="conversation-row__name"><%= other.display_name %></span>
-              <span class="conversation-row__preview">
-                <%= conversation.last_message&.body&.truncate(40) || "Démarrez la conversation" %>
-              </span>
-            </span>
-          <% end %>
-        </li>
-      <% end %>
-    </ul>
-  <% end %>
+    <% end %>
+  </section>
 </div>
