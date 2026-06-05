@@ -78,6 +78,7 @@ class SuggestionsController < ApplicationController
     @filters    = (session[:last_filters] || {}).with_indifferent_access
     count       = (@filters[:count].presence || 10).to_i
     @playlists  = @suggestion.playlists.pending.includes(:song).limit(count)
+    @friends    = current_user.friends
   end
 
   def recap

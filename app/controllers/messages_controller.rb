@@ -7,13 +7,20 @@ class MessagesController < ApplicationController
       return
     end
 
-    @message = conversation.messages.build(message_params.merge(user: current_user))
+    @message = conversation.messages.build(user: current_user, body: message_params[:body])
+    attach_song(@message)
 
     if @message.save
-      # The sender's own append + broadcast to the other party both happen via
-      # the model's after_create_commit Turbo broadcast. Just clear the form.
+      # The bubble append + broadcast to the other party both happen via the
+      # model's after_create_commit Turbo broadcast. Just reset the form here.
       respond_to do |format|
-        format.turbo_stream { render turbo_stream: turbo_stream.replace("message_form", partial: "messages/form", locals: { conversation: conversation, message: Message.new }) }
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.replace(
+            "message_form",
+            partial: "messages/form",
+            locals: { conversation: conversation, message: Message.new }
+          )
+        end
         format.html { redirect_to conversation_path(conversation) }
       end
     else
@@ -23,7 +30,20 @@ class MessagesController < ApplicationController
 
   private
 
+  # A message can carry: an existing song (song_id), or a track picked from a
+  # Deezer search in the chat (track[artist] + track[title]).
+  def attach_song(message)
+    if params[:song_id].present?
+      message.song = Song.find_by(id: params[:song_id])
+    elsif params.dig(:track, :title).present?
+      message.song = Song.from_deezer_search(
+        artist: params.dig(:track, :artist),
+        title:  params.dig(:track, :title)
+      )
+    end
+  end
+
   def message_params
-    params.require(:message).permit(:body)
+    params.fetch(:message, {}).permit(:body)
   end
 end

@@ -1,5 +1,23 @@
-<%= form_with model: [conversation, message], id: "message_form", class: "chat-form" do |f| %>
-  <%= f.text_field :body, placeholder: "Écris un message…", autocomplete: "off",
-                   class: "chat-form__input", autofocus: true %>
-  <%= f.submit "Envoyer", class: "chat-form__send" %>
-<% end %>
+<div id="message_form"
+     data-controller="track-search"
+     data-track-search-url-value="<%= seed_search_suggestions_path %>"
+     data-track-search-send-url-value="<%= conversation_messages_path(conversation) %>">
+
+  <div class="track-search-panel" data-track-search-target="panel" hidden>
+    <input type="text" class="track-search__input" autocomplete="off"
+           placeholder="Cherche un son à envoyer…"
+           data-track-search-target="input" data-action="input->track-search#query">
+    <div class="track-search__results" data-track-search-target="results"></div>
+  </div>
+
+  <%= form_with model: [conversation, message], class: "chat-form" do |f| %>
+    <button type="button" class="chat-form__music" data-action="track-search#togglePanel" aria-label="Partager un son">
+      <i class="fa-solid fa-music"></i>
+    </button>
+    <%= f.text_field :body, placeholder: "Écris un message…", autocomplete: "off",
+                     class: "chat-form__input", data: { track_search_target: "body" } %>
+    <button type="submit" class="chat-form__send" aria-label="Envoyer">
+      <i class="fa-solid fa-paper-plane"></i>
+    </button>
+  <% end %>
+</div>
