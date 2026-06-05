@@ -172,7 +172,10 @@
   }
 }
 
-.filters-form select option { background: #15131f; color: $white; }
+.filters-form select option {
+  background: #15131f;
+  color: $white;
+}
 
 .btn-apply-filters {
   margin-top: 10px;
@@ -212,6 +215,7 @@
   display: none;
   flex-direction: column;
   transition: transform 0.4s ease, opacity 0.4s ease;
+  perspective: 1000px;
 }
 
 .swipe-card.active {
@@ -494,8 +498,6 @@ $flt-violet: #7c3aed;
   &__add { width: 34px; height: 34px; flex: 0 0 auto; border: none; border-radius: 50%; background: $flt-violet; color: $white; font-size: 14px; cursor: pointer; }
 }
 
-
-
 .filters-switches {
   display: flex;
   flex-direction: column;
@@ -539,8 +541,6 @@ $flt-violet: #7c3aed;
   &:hover { background: #17a349; }
 }
 
-// Tap-to-start overlay — full screen so it captures the first interaction
-// (needed to unlock browser audio autoplay) instead of sitting in page flow.
 .tap-overlay {
   position: fixed;
   inset: 0;
@@ -572,15 +572,11 @@ $flt-violet: #7c3aed;
 }
 
 @keyframes tap-pulse {
-  0%, 100% { transform: scale(1);    opacity: 0.85; }
-  50%      { transform: scale(1.12); opacity: 1; }
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.12); opacity: 1; }
 }
 
-
-// Flip card — card front/back animation
-.swipe-card {
-  perspective: 1000px;
-}
+// Flip card
 
 .flip-card-inner {
   width: 100%;
@@ -624,55 +620,55 @@ $flt-violet: #7c3aed;
 .back-label {
   display: inline-block;
   width: fit-content;
-  margin-bottom: 14px;
-  padding: 7px 12px;
+  margin-bottom: 10px;
+  padding: 6px 10px;
   border-radius: 999px;
   background: rgba(124, 92, 255, 0.18);
   border: 1px solid rgba(124, 92, 255, 0.45);
   color: #cfc4ff;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 800;
 }
 
 .flip-card-back h2 {
-  margin: 0 0 8px;
-  font-size: 1.7rem;
-  line-height: 1.1;
+  margin: 0 0 6px;
+  font-size: 1.3rem;
+  line-height: 1.15;
   font-weight: 800;
 }
 
 .back-artist {
-  margin: 0 0 22px;
+  margin: 0 0 12px;
   color: rgba(255, 255, 255, 0.72);
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 600;
 }
 
 .song-insight-box {
-  margin-bottom: 20px;
-  padding: 16px;
-  border-radius: 20px;
+  margin-bottom: 12px;
+  padding: 12px;
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.06);
 }
 
 .song-insight-box p {
   margin: 0;
   color: #e5e1f4;
-  font-size: 0.98rem;
-  line-height: 1.45;
+  font-size: 0.86rem;
+  line-height: 1.35;
 }
 
 .song-facts {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .song-facts p {
   margin: 0;
   color: #ded9ef;
-  font-size: 0.98rem;
-  line-height: 1.45;
+  font-size: 0.86rem;
+  line-height: 1.3;
 }
 
 .song-facts strong {
@@ -681,12 +677,13 @@ $flt-violet: #7c3aed;
 }
 
 .flip-help {
-  margin-top: 22px;
+  margin-top: 14px;
   text-align: center;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   color: #8f89a8;
 }
-// ── Recap page ──────────────────────────────────────────────────────────────
+
+// Recap page
 
 .recap-container {
   min-height: 100vh;
@@ -723,7 +720,7 @@ $flt-violet: #7c3aed;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  min-width: 0; // empêche le débordement de la colonne droite
+  min-width: 0;
 }
 
 .recap-cover {
