@@ -5,7 +5,7 @@
   padding: 40px 28px 36px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
 
   background:
     radial-gradient(circle at 50% 58%, rgba(69, 115, 255, 0.85) 0%, rgba(81, 65, 255, 0.42) 30%, rgba(5, 5, 16, 0.98) 68%),
@@ -40,6 +40,9 @@
 
 .onboarding-content {
   text-align: center;
+  margin-top: auto;
+  margin-bottom: auto;
+  padding-bottom: 80px;
 }
 
 .onboarding-content h2 {
@@ -71,17 +74,14 @@
   background: #1ed760;
 }
 
-.start-button {
-  display: block;
-  max-width: 240px;
-  margin: 40px auto 0;
-  padding: 14px 22px;
-  border-radius: 14px;
-  background: rgba(39, 39, 49, 0.95);
-  color: white;
-  text-align: center;
-  text-decoration: none;
-  font-weight: 700;
+.home-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba($violet-500, 0.6);
+  box-shadow: 0 0 20px rgba($violet-500, 0.4);
+  margin-bottom: 16px;
 }
 
 .welcome-text {
@@ -90,12 +90,17 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
-.logout-button {
-  margin-top: 24px;
-  border: none;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.7);
-  text-decoration: underline;
+.home-cta {
+  margin-top: 48px;
+  text-align: center;
+}
+
+.home-cta-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0;
 }
 
 .onboarding-help {
