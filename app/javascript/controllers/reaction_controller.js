@@ -1,11 +1,30 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Toggles an emoji reaction. The server broadcasts the updated counter back to
-// every participant (incl. us), so we don't touch the DOM here.
 export default class extends Controller {
   static values = { messageId: Number }
+  static targets = ["picker"]
 
-  toggle(event) {
+  connect() {
+    this._closeHandler = (e) => {
+      if (!this.element.contains(e.target)) this.closePicker()
+    }
+    document.addEventListener("click", this._closeHandler)
+  }
+
+  disconnect() {
+    document.removeEventListener("click", this._closeHandler)
+  }
+
+  togglePicker(e) {
+    e.stopPropagation()
+    this.pickerTarget.classList.toggle("reaction-picker--open")
+  }
+
+  closePicker() {
+    this.pickerTarget.classList.remove("reaction-picker--open")
+  }
+
+  pick(event) {
     const emoji = event.currentTarget.dataset.emoji
     fetch(`/messages/${this.messageIdValue}/reactions`, {
       method: "POST",
@@ -15,5 +34,6 @@ export default class extends Controller {
       },
       body: JSON.stringify({ emoji })
     })
+    this.closePicker()
   }
 }
