@@ -142,15 +142,13 @@ class SuggestionsController < ApplicationController
     {
       mood:         params[:mood].presence,
       genre:        params[:genre].presence,
-      time_range:   TIME_RANGES.include?(params[:time_range]) ? params[:time_range] : "medium_term",
+      time_range:   TIME_RANGES.include?(params[:time_range]) ? params[:time_range] : "long_term",
       count:        (params[:count].presence || 10).to_i.clamp(5, 50),
-      popularity:   POPULARITY.include?(params[:popularity]) ? params[:popularity] : nil,
       decade:       params[:decade].presence,
       tempo:        TEMPOS.include?(params[:tempo]) ? params[:tempo] : nil,
-      clean_only:    params[:clean_only].present?,
       diverse:       params[:diverse].present?,
       discovery:     params[:discovery].present?,
-      exclude_liked: params[:exclude_liked].present?,
+      exclude_liked: true,
       seed_artists: clean_seeds(params[:seed_artists]),
       seed_tracks:  clean_seeds(params[:seed_tracks])
     }

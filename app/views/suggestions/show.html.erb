@@ -5,13 +5,14 @@
   <div class="filters-panel" id="filters-panel">
     <button type="button" class="filters-close" id="filters-close">×</button>
 
-    <%= form_with url: suggestions_path, method: :post, data: { turbo: false }, class: "filters-form" do %>
+    <%= form_with url: suggestions_path, method: :post, data: { turbo: false, controller: "filters" }, class: "filters-form" do %>
+      <%# 1. Artistes / Titres %>
       <div class="seed-search"
            id="seed-search"
            data-search-url="<%= seed_search_suggestions_path %>"
            data-initial-artists="<%= (@filters[:seed_artists] || []).to_json %>"
            data-initial-tracks="<%= (@filters[:seed_tracks] || []).to_json %>">
-        <span class="seed-search__label">Artistes / sons</span>
+        <span class="seed-search__label">Artistes / Titres</span>
         <input type="text" id="seed-input" class="seed-input"
                placeholder="Rechercher un artiste ou un titre…" autocomplete="off">
         <div class="seed-results" id="seed-results"></div>
@@ -19,86 +20,142 @@
         <div id="seed-inputs"></div>
       </div>
 
+      <%# 2. Nombre de titres %>
       <label>
-        Mood
-        <%= select_tag :mood, options_for_select(
-          [["Peu importe", ""], ["Chill", "chill"], ["Énergie", "energy"],
-           ["Focus", "focus"], ["Happy", "happy"], ["Late night", "late night"]],
-          @filters[:mood]) %>
+        Nombre de titres recommandés
+        <%= select_tag :count, options_for_select(
+          [["10", "10"], ["25", "25"], ["50", "50"]],
+          (@filters[:count] || 10).to_s) %>
       </label>
 
+      <%# 3. Période d'écoute %>
+      <label>
+        Période d'écoute
+        <%= select_tag :time_range, options_for_select(
+          [["4 dernières semaines", "short_term"], ["6 derniers mois", "medium_term"],
+           ["Depuis toujours", "long_term"]],
+          @filters[:time_range] || "long_term") %>
+      </label>
+
+      <%# 4. Genre %>
       <label>
         Genre
         <%= select_tag :genre, options_for_select(
-          [["Peu importe", ""], ["Pop", "pop"], ["Rock", "rock"], ["Électro", "electronic"],
+          [["--", ""], ["Pop", "pop"], ["Rock", "rock"], ["Électro", "electronic"],
            ["Hip-hop", "hip-hop"], ["R&B", "rnb"], ["Jazz", "jazz"], ["Classique", "classical"],
            ["Metal", "metal"], ["Indie", "indie"], ["Soul", "soul"], ["Reggae", "reggae"],
            ["Folk", "folk"], ["House", "house"], ["Techno", "techno"]],
           @filters[:genre]) %>
       </label>
 
-      <label>
-        Période d'écoute
-        <%= select_tag :time_range, options_for_select(
-          [["4 dernières semaines", "short_term"], ["6 derniers mois", "medium_term"],
-           ["Depuis toujours", "long_term"]],
-          @filters[:time_range] || "medium_term") %>
-      </label>
+      <%# 5. Mood avec icônes %>
+      <div class="filter-block">
+        <span class="filter-label">Mood</span>
+        <div class="mood-pills">
+          <% [["", "✨", "Tous"], ["chill", "🌙", "Chill"], ["energy", "⚡", "Énergie"],
+              ["focus", "🎯", "Focus"], ["happy", "☀️", "Happy"], ["late night", "🌃", "Late night"]].each do |value, icon, label| %>
+            <label class="mood-pill <%= 'is-active' if @filters[:mood].to_s == value %>">
+              <%= radio_button_tag :mood, value, @filters[:mood].to_s == value %>
+              <span><%= icon %> <%= label %></span>
+            </label>
+          <% end %>
+        </div>
+      </div>
 
-      <label>
-        Nombre de morceaux
-        <%= select_tag :count, options_for_select(
-          [["10", "10"], ["25", "25"], ["50", "50"]],
-          (@filters[:count] || 10).to_s) %>
-      </label>
+      <%# 6-7-8. Filtres curseurs %>
+      <div class="filter-block">
+        <span class="filter-label">Filtres avancés</span>
+        <div class="range-filters">
 
-      <label>
-        Popularité
-        <%= select_tag :popularity, options_for_select(
-          [["Peu importe", ""], ["Mainstream", "mainstream"], ["Hidden gems", "hidden"]],
-          @filters[:popularity]) %>
-      </label>
+          <%# Décennie %>
+          <% decade_values = ["1960", "1970", "1980", "1990", "2000", "2010", "2020"] %>
+          <% current_decade_idx = [decade_values.index(@filters[:decade].to_s) || 0, 0].max %>
+          <% decade_active = @filters[:decade].present? %>
+          <div class="range-filter <%= 'is-active' if decade_active %>" id="decade-block">
+            <button type="button" class="range-chip" id="decade-toggle">
+              Décennie<span class="range-chip__value" id="decade-label"><%= decade_active ? " · #{@filters[:decade]}s" : "" %></span>
+            </button>
+            <div class="range-filter__body">
+              <input type="range" id="decade-range" min="0" max="6" step="1" value="<%= current_decade_idx %>" class="filter-range">
+            </div>
+            <input type="hidden" name="decade" id="decade-hidden" value="<%= decade_active ? @filters[:decade] : '' %>">
+          </div>
 
-      <label>
-        Époque
-        <%= select_tag :decade, options_for_select(
-          [["Peu importe", ""], ["1960s", "1960"], ["1970s", "1970"], ["1980s", "1980"],
-           ["1990s", "1990"], ["2000s", "2000"], ["2010s", "2010"], ["2020s", "2020"]],
-          @filters[:decade]) %>
-      </label>
 
-      <label>
-        Tempo
-        <%= select_tag :tempo, options_for_select(
-          [["Peu importe", ""], ["Lent", "slow"], ["Moyen", "medium"], ["Rapide", "fast"]],
-          @filters[:tempo]) %>
-      </label>
+          <%# Tempo %>
+          <% tempo_values = ["slow", "medium", "fast"] %>
+          <% current_tempo_idx = [tempo_values.index(@filters[:tempo].to_s) || 1, 0].max %>
+          <% tempo_active = @filters[:tempo].present? %>
+          <div class="range-filter <%= 'is-active' if tempo_active %>" id="tempo-block">
+            <button type="button" class="range-chip" id="tempo-toggle">
+              Tempo<span class="range-chip__value" id="tempo-label"><%= tempo_active ? " · #{{"slow" => "Lent 🐢", "medium" => "Moyen 🚶", "fast" => "Rapide 🚀"}[@filters[:tempo].to_s]}" : "" %></span>
+            </button>
+            <div class="range-filter__body">
+              <input type="range" id="tempo-range" min="0" max="2" step="1" value="<%= current_tempo_idx %>" class="filter-range">
+            </div>
+            <input type="hidden" name="tempo" id="tempo-hidden" value="<%= tempo_active ? @filters[:tempo] : '' %>">
+          </div>
 
+        </div>
+      </div>
+
+      <%# Checkboxes %>
       <div class="filters-switches">
         <label class="switch">
-          <%= check_box_tag :clean_only, "1", @filters[:clean_only] %>
-          Version clean uniquement
-        </label>
-
-        <label class="switch">
           <%= check_box_tag :diverse, "1", @filters[:diverse] %>
-          1 titre max par artiste
+          1 seul titre par artiste
         </label>
 
         <label class="switch">
           <%= check_box_tag :discovery, "1", @filters[:discovery] %>
-          Que des nouveautés (exclure mes artistes connus)
-        </label>
-
-        <label class="switch">
-          <%= check_box_tag :exclude_liked, "1", @filters[:exclude_liked] %>
-          Ne pas reproposer mes titres likés
+          <span>Nouveautés seulement <span style="font-weight: 400; opacity: 0.7;">(exclue les artistes que vous connaissez)</span></span>
         </label>
       </div>
 
       <%= submit_tag "Appliquer", class: "btn-apply-filters" %>
     <% end %>
   </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const DECADE_LABELS = ["1960s","1970s","1980s","1990s","2000s","2010s","2020s"]
+      const DECADE_VALUES = ["1960","1970","1980","1990","2000","2010","2020"]
+      const POP_LABELS    = ["Hidden gems 💎","Mainstream 🔥"]
+      const POP_VALUES    = ["hidden","mainstream"]
+      const TEMPO_LABELS  = ["Lent 🐢","Moyen 🚶","Rapide 🚀"]
+      const TEMPO_VALUES  = ["slow","medium","fast"]
+
+      function initRange(rangeId, labelId, hiddenId, toggleId, blockId, labels, values) {
+        const range  = document.getElementById(rangeId)
+        const label  = document.getElementById(labelId)
+        const hidden = document.getElementById(hiddenId)
+        const toggle = document.getElementById(toggleId)
+        const block  = document.getElementById(blockId)
+        if (!range || !toggle) return
+
+        range.addEventListener("input", function() {
+          const val = labels[parseInt(range.value)]
+          label.textContent = " · " + val
+          hidden.value = values[parseInt(range.value)]
+        })
+
+        toggle.addEventListener("click", function() {
+          const active = block.classList.toggle("is-active")
+          if (active) {
+            const val = labels[parseInt(range.value)]
+            label.textContent = " · " + val
+            hidden.value = values[parseInt(range.value)]
+          } else {
+            label.textContent = ""
+            hidden.value = ""
+          }
+        })
+      }
+
+      initRange("decade-range", "decade-label", "decade-hidden", "decade-toggle", "decade-block", DECADE_LABELS, DECADE_VALUES)
+      initRange("tempo-range",  "tempo-label",  "tempo-hidden",  "tempo-toggle",  "tempo-block",  TEMPO_LABELS,  TEMPO_VALUES)
+    })
+  </script>
 
   <% if @playlists.any? %>
     <div class="cards-stack" id="cards-stack">
