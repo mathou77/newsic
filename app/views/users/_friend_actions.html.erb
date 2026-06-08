@@ -1,24 +1,28 @@
 <%# Friend / message actions for `user` given `friendship` (may be nil). %>
+<%# data-turbo-frame="_top" forces full-page navigation so these buttons work
+    correctly whether the partial is rendered inside a Turbo Frame or not. %>
 <div class="friend-actions">
   <% if friendship.nil? %>
     <%= button_to "Ajouter en ami", friendships_path,
-                  params: { addressee_id: user.id }, class: "btn-friend" %>
+                  params: { addressee_id: user.id }, class: "btn-friend",
+                  data: { turbo_frame: "_top" } %>
 
   <% elsif friendship.accepted? %>
     <%= button_to "Envoyer un message", conversations_path,
-                  params: { user_id: user.id }, class: "btn-friend btn-friend--primary" %>
+                  params: { user_id: user.id }, class: "btn-friend btn-friend--primary",
+                  data: { turbo_frame: "_top" } %>
     <%= button_to "Retirer", friendship_path(friendship), method: :delete,
-                  class: "btn-friend btn-friend--ghost" %>
+                  class: "btn-friend btn-friend--ghost", data: { turbo_frame: "_top" } %>
 
   <% elsif friendship.requester_id == current_user.id %>
     <span class="friend-state">Demande envoyée</span>
     <%= button_to "Annuler", friendship_path(friendship), method: :delete,
-                  class: "btn-friend btn-friend--ghost" %>
+                  class: "btn-friend btn-friend--ghost", data: { turbo_frame: "_top" } %>
 
   <% else %>
     <%= button_to "Accepter", friendship_path(friendship), method: :patch,
-                  class: "btn-friend btn-friend--primary" %>
+                  class: "btn-friend btn-friend--primary", data: { turbo_frame: "_top" } %>
     <%= button_to "Refuser", friendship_path(friendship), method: :delete,
-                  class: "btn-friend btn-friend--ghost" %>
+                  class: "btn-friend btn-friend--ghost", data: { turbo_frame: "_top" } %>
   <% end %>
 </div>
