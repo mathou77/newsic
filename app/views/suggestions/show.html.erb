@@ -1,6 +1,12 @@
 <div class="swipe-container" data-recap-url="<%= recap_suggestion_path(@suggestion) %>"
      data-controller="share-sheet" data-share-sheet-url-value="<%= shares_path %>">
-  <button type="button" class="filters-toggle" id="filters-toggle">🎚️ Filtres</button>
+  <button type="button" class="filters-toggle" id="filters-toggle">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
+      <circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/><circle cx="11" cy="18" r="2" fill="currentColor" stroke="none"/>
+    </svg>
+    <span class="filters-badge" id="filters-badge" style="display:none"></span>
+  </button>
 
   <div class="filters-panel" id="filters-panel">
     <button type="button" class="filters-close" id="filters-close">×</button>
@@ -154,6 +160,44 @@
 
       initRange("decade-range", "decade-label", "decade-hidden", "decade-toggle", "decade-block", DECADE_LABELS, DECADE_VALUES)
       initRange("tempo-range",  "tempo-label",  "tempo-hidden",  "tempo-toggle",  "tempo-block",  TEMPO_LABELS,  TEMPO_VALUES)
+
+      // Badge : compte les filtres actifs
+      function updateBadge() {
+        const badge = document.getElementById("filters-badge")
+        const toggle = document.getElementById("filters-toggle")
+        if (!badge) return
+
+        let count = 0
+
+        // Seulement le select genre (pas count ni time_range qui ont des valeurs par défaut)
+        const genre = document.querySelector(".filters-form select[name='genre']")
+        if (genre && genre.value !== "") count++
+
+        // Mood : radio non vide
+        const mood = document.querySelector(".filters-form input[name='mood']:checked")
+        if (mood && mood.value !== "") count++
+
+        // Curseurs actifs (décennie, tempo)
+        document.querySelectorAll(".range-filter.is-active").forEach(() => count++)
+
+        // Checkboxes cochées
+        document.querySelectorAll(".filters-form input[type='checkbox']:checked").forEach(() => count++)
+
+        if (count > 0) {
+          badge.textContent = count
+          badge.style.display = "block"
+          toggle.classList.add("is-active")
+        } else {
+          badge.style.display = "none"
+          toggle.classList.remove("is-active")
+        }
+      }
+
+      // Écoute tous les changements dans le formulaire
+      document.querySelector(".filters-form")?.addEventListener("change", updateBadge)
+      document.querySelectorAll(".range-chip").forEach(btn => btn.addEventListener("click", () => setTimeout(updateBadge, 50)))
+
+      updateBadge() // init au chargement
     })
   </script>
 
@@ -166,22 +210,26 @@
 
           <div class="flip-card-inner" onclick="flipCard(event, this)">
             <div class="flip-card-front">
-              <img src="<%= playlist.song.image_url %>" alt="<%= playlist.song.title %>" class="card-cover">
+              <img src="<%= playlist.song.image_url %>" alt="<%= playlist.song.title %>" class="card-cover" crossorigin="anonymous">
 
-              <div class="card-actions">
-                <button type="button" class="card-action" data-action="share-sheet#open"
-                        data-song-id="<%= playlist.song.id %>" aria-label="Partager">
-                  <i class="fa-solid fa-share"></i>
+              <div class="card-player-bar">
+                <button type="button" class="player-bar__toggle" aria-label="Pause">
+                  <i class="fa-solid fa-pause player-bar__icon"></i>
                 </button>
-
-                <button type="button" class="card-action" aria-label="Plus">
-                  <i class="fa-solid fa-ellipsis"></i>
-                </button>
+                <div class="player-bar__progress">
+                  <div class="player-bar__fill"></div>
+                </div>
               </div>
 
               <div class="card-info">
-                <h2><%= playlist.song.title %></h2>
-                <p><%= playlist.song.artist %></p>
+                <div class="card-info__text">
+                  <h2><%= playlist.song.title %></h2>
+                  <p><%= playlist.song.artist %></p>
+                </div>
+                <button type="button" class="card-share" data-action="share-sheet#open"
+                        data-song-id="<%= playlist.song.id %>" aria-label="Partager">
+                  <i class="fa-solid fa-share-nodes"></i>
+                </button>
               </div>
             </div>
 
@@ -244,13 +292,13 @@
           </div>
 
           <audio class="card-audio" src="<%= playlist.song.preview_url %>" preload="auto"></audio>
-
-          <div class="swipe-buttons">
-            <button class="btn-dislike" onclick="vote(this, 'disliked')">✕</button>
-            <button class="btn-like" onclick="vote(this, 'liked')">♥</button>
-          </div>
         </div>
       <% end %>
+    </div>
+
+    <div class="swipe-buttons" id="swipe-buttons">
+      <button class="btn-dislike" onclick="vote(this, 'disliked')">✕</button>
+      <button class="btn-like" onclick="vote(this, 'liked')">♥</button>
     </div>
   <% else %>
     <div class="done-screen">
@@ -265,7 +313,10 @@
       <div class="share-sheet__handle"
            data-action="touchstart->share-sheet#dragStart touchmove->share-sheet#dragMove touchend->share-sheet#dragEnd">
         <div class="share-sheet__grabber"></div>
-        <h3 class="share-sheet__title">Partager à…</h3>
+        <div class="share-sheet__header">
+          <h3 class="share-sheet__title">Partager à…</h3>
+          <button type="button" class="share-sheet__close" data-action="share-sheet#close" aria-label="Fermer">✕</button>
+        </div>
       </div>
 
       <input type="text" class="share-sheet__search" placeholder="Rechercher un ami…"
@@ -313,15 +364,163 @@
     window.__newsicSwipe = true;
     window.__newsicAudioUnlocked = false;
 
+    let playerPaused = false;
+
+    function getActiveBar() {
+      const active = document.querySelector('.swipe-card.active');
+      if (!active) return {};
+      return {
+        fill:   active.querySelector('.player-bar__fill'),
+        icon:   active.querySelector('.player-bar__icon'),
+        toggle: active.querySelector('.player-bar__toggle'),
+        audio:  active.querySelector('.card-audio')
+      };
+    }
+
+    function updatePlayerIcon() {
+      const { icon } = getActiveBar();
+      if (!icon) return;
+      icon.className = playerPaused ? 'fa-solid fa-play player-bar__icon' : 'fa-solid fa-pause player-bar__icon';
+    }
+
+    function bindProgressBar(audio, fill) {
+      // On retire l'ancien listener en clonant
+      const newAudio = audio;
+      newAudio.addEventListener('timeupdate', function() {
+        if (!newAudio.duration || !fill) return;
+        fill.style.width = (newAudio.currentTime / newAudio.duration * 100) + '%';
+      });
+    }
+
+    // ── Couleur dominante de la cover ───────────────────────────────────────────
+    function getDominantColor(img, callback) {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 32;
+        canvas.height = 32;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, 32, 32);
+        const data = ctx.getImageData(0, 0, 32, 32).data;
+
+        let r = 0, g = 0, b = 0, count = 0;
+        for (let i = 0; i < data.length; i += 16) {
+          // Ignore pixels trop sombres ou trop clairs
+          const pr = data[i], pg = data[i+1], pb = data[i+2];
+          const brightness = (pr + pg + pb) / 3;
+          if (brightness > 30 && brightness < 230) {
+            r += pr; g += pg; b += pb; count++;
+          }
+        }
+        if (count === 0) { callback(null); return; }
+        callback({ r: Math.round(r/count), g: Math.round(g/count), b: Math.round(b/count) });
+      } catch(e) { callback(null); }
+    }
+
+    function applyCardColor(card) {
+      const img = card.querySelector('.card-cover');
+      if (!img) return;
+
+      const apply = () => {
+        getDominantColor(img, (color) => {
+          if (!color) return;
+          const { r, g, b } = color;
+          // Reset le style inline de la card (border/shadow dynamiques supprimés)
+          card.style.borderColor = '';
+          card.style.boxShadow = '';
+          // Change le fond du container
+          const container = document.querySelector('.swipe-container');
+          if (!container) return;
+          container.style.background = `
+            radial-gradient(circle at 50% 40%, rgba(${r},${g},${b},0.45) 0%, rgba(${r},${g},${b},0.08) 55%, #050510 80%),
+            #050510
+          `;
+        });
+      };
+
+      if (img.complete) apply();
+      else img.addEventListener('load', apply);
+    }
+
+    // Applique la couleur à toutes les cards au chargement
+    document.querySelectorAll('.swipe-card').forEach(applyCardColor);
+
+    // ── Audio ────────────────────────────────────────────────────────────────────
+
     function playCurrentAudio() {
       document.querySelectorAll('.card-audio').forEach(a => {
         a.pause();
         a.currentTime = 0;
       });
 
-      const active = document.querySelector('.swipe-card.active');
-      if (active) active.querySelector('.card-audio').play().catch(() => {});
+      playerPaused = false;
+      const { audio, fill } = getActiveBar();
+      if (fill) fill.style.width = '0%';
+
+      if (audio) {
+        audio.play().catch(() => {});
+        bindProgressBar(audio, fill);
+      }
+      updatePlayerIcon();
+
+      // Met à jour le halo de fond pour la nouvelle card
+      const newActive = document.querySelector('.swipe-card.active');
+      if (newActive) applyCardColor(newActive);
     }
+
+    // Seek : clic ou drag sur la barre de progression
+    function seekFromEvent(e, bar) {
+      const { audio, fill } = getActiveBar();
+      if (!audio || !audio.duration) return;
+      const rect = bar.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      audio.currentTime = ratio * audio.duration;
+      if (fill) fill.style.width = (ratio * 100) + '%';
+    }
+
+    let isSeeking = false;
+
+    document.addEventListener('mousedown', function(e) {
+      const bar = e.target.closest('.player-bar__progress');
+      if (!bar) return;
+      isSeeking = true;
+      seekFromEvent(e, bar);
+    });
+    document.addEventListener('mousemove', function(e) {
+      if (!isSeeking) return;
+      const bar = document.querySelector('.swipe-card.active .player-bar__progress');
+      if (bar) seekFromEvent(e, bar);
+    });
+    document.addEventListener('mouseup', () => { isSeeking = false; });
+
+    document.addEventListener('touchstart', function(e) {
+      const bar = e.target.closest('.player-bar__progress');
+      if (!bar) return;
+      isSeeking = true;
+      seekFromEvent(e, bar);
+    }, { passive: true });
+    document.addEventListener('touchmove', function(e) {
+      if (!isSeeking) return;
+      const bar = document.querySelector('.swipe-card.active .player-bar__progress');
+      if (bar) seekFromEvent(e, bar);
+    }, { passive: true });
+    document.addEventListener('touchend', () => { isSeeking = false; });
+
+    // Délégation : le clic sur n'importe quel toggle de card active
+    document.addEventListener('click', function(e) {
+      const btn = e.target.closest('.player-bar__toggle');
+      if (!btn) return;
+      const { audio } = getActiveBar();
+      if (!audio) return;
+      if (playerPaused) {
+        audio.play().catch(() => {});
+        playerPaused = false;
+      } else {
+        audio.pause();
+        playerPaused = true;
+      }
+      updatePlayerIcon();
+    });
 
     function unlockAudio() {
       if (window.__newsicAudioUnlocked) return;
@@ -337,13 +536,14 @@
     window.flipCard = function (event, element) {
       if (event.target.closest('.swipe-buttons')) return;
       if (event.target.closest('.card-actions')) return;
+      if (event.target.closest('.card-player-bar')) return;
       element.classList.toggle('is-flipped');
     };
 
     window.vote = function (btn, status) {
       unlockAudio();
 
-      const card = btn.closest('.swipe-card');
+      const card = document.querySelector('.swipe-card.active');
       const container = document.querySelector('.swipe-container');
       const recapUrl = container ? container.dataset.recapUrl : '/';
 
@@ -384,8 +584,8 @@
 
       if (!active) return;
 
-      if (diff > 80) window.vote(active.querySelector('.btn-like'), 'liked');
-      if (diff < -80) window.vote(active.querySelector('.btn-dislike'), 'disliked');
+      if (diff > 80) window.vote(null, 'liked');
+      if (diff < -80) window.vote(null, 'disliked');
     });
 
     function initPage() {
@@ -415,6 +615,10 @@
         active.querySelector('.card-audio').play().then(() => {
           window.__newsicAudioUnlocked = true;
           if (overlay) overlay.style.display = 'none';
+          // Initialise la barre de progression sur la première card
+          const { audio, fill } = getActiveBar();
+          if (audio && fill) bindProgressBar(audio, fill);
+          updatePlayerIcon();
         }).catch(() => {});
       }
 

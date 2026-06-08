@@ -762,7 +762,34 @@ $msg-bg: #0a0a1a;
   background: rgba($white, 0.25);
   margin: 0 auto 6px;
 }
+.share-sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
 .share-sheet__title { margin: 0; font-size: 18px; font-weight: 800; }
+
+.share-sheet__close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba($white, 0.15);
+  background: rgba($white, 0.08);
+  color: rgba($white, 0.7);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba($white, 0.15);
+    color: $white;
+  }
+}
 
 .share-sheet__search,
 .share-sheet__message {
