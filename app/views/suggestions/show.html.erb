@@ -168,6 +168,17 @@
             <div class="flip-card-front">
               <img src="<%= playlist.song.image_url %>" alt="<%= playlist.song.title %>" class="card-cover">
 
+              <div class="card-actions">
+                <button type="button" class="card-action" data-action="share-sheet#open"
+                        data-song-id="<%= playlist.song.id %>" aria-label="Partager">
+                  <i class="fa-solid fa-share"></i>
+                </button>
+
+                <button type="button" class="card-action" aria-label="Plus">
+                  <i class="fa-solid fa-ellipsis"></i>
+                </button>
+              </div>
+
               <div class="card-info">
                 <h2><%= playlist.song.title %></h2>
                 <p><%= playlist.song.artist %></p>
@@ -175,66 +186,61 @@
             </div>
 
             <div class="flip-card-back">
+              <span class="back-label">
+                Pourquoi cette reco ?
+              </span>
 
-                <span class="back-label">
-                  Pourquoi cette reco ?
-                </span>
+              <h2><%= playlist.song.title %></h2>
 
-                <h2><%= playlist.song.title %></h2>
+              <p class="back-artist">
+                <%= playlist.song.artist %>
+              </p>
 
-                <p class="back-artist">
-                  <%= playlist.song.artist %>
+              <div class="song-insight-box">
+                <p>
+                  Sélectionné à partir de tes écoutes Spotify pour te faire découvrir un titre proche de ton univers musical.
                 </p>
-
-                <div class="song-insight-box">
-                  <p>
-                    Sélectionné à partir de tes écoutes Spotify pour te faire découvrir un titre proche de ton univers musical.
-                  </p>
-                </div>
-
-                <div class="song-facts">
-
-                  <% if playlist.song.album_name.present? %>
-                    <p>
-                      💿 Issu de l'album
-                      <strong><%= playlist.song.album_name %></strong>
-                    </p>
-                  <% end %>
-
-                  <% if playlist.song.duration.present? %>
-                    <p>
-                      ⏱️ Durée :
-                      <strong>
-                        <%= playlist.song.duration / 60 %>:<%= "%02d" % (playlist.song.duration % 60) %>
-                      </strong>
-                    </p>
-                  <% end %>
-
-                  <% if playlist.song.rank.present? %>
-                    <p>
-                      🎵 Recommandé parmi les titres les plus pertinents trouvés pour toi.
-                    </p>
-                  <% end %>
-
-                </div>
-
-                <p class="flip-help">
-                  Clique pour revenir à la pochette
-                </p>
-
               </div>
-          <div class="card-actions">
-            <button type="button" class="card-action" data-action="share-sheet#open"
-                    data-song-id="<%= playlist.song.id %>" aria-label="Partager">
-              <i class="fa-solid fa-share"></i>
-            </button>
-            <button type="button" class="card-action" aria-label="Plus">
-              <i class="fa-solid fa-ellipsis"></i>
-            </button>
-          </div>
 
-          <img src="<%= playlist.song.image_url %>" alt="<%= playlist.song.title %>" class="card-cover">
+              <div class="song-facts">
+                <% if playlist.song.album_name.present? %>
+                  <p>
+                    💿 Issu de l'album
+                    <strong><%= playlist.song.album_name %></strong>
+                  </p>
+                <% end %>
 
+                <% if playlist.song.duration.present? %>
+                  <p>
+                    ⏱️ Durée :
+                    <strong>
+                      <%= playlist.song.duration / 60 %>:<%= "%02d" % (playlist.song.duration % 60) %>
+                    </strong>
+                  </p>
+                <% end %>
+
+                <% if playlist.song.respond_to?(:release_year) && playlist.song.release_year.present? %>
+                  <p>
+                    📅 Année :
+                    <strong><%= playlist.song.release_year %></strong>
+                  </p>
+                <% elsif playlist.song.respond_to?(:year) && playlist.song.year.present? %>
+                  <p>
+                    📅 Année :
+                    <strong><%= playlist.song.year %></strong>
+                  </p>
+                <% elsif playlist.song.respond_to?(:release_date) && playlist.song.release_date.present? %>
+                  <p>
+                    📅 Année :
+                    <strong><%= playlist.song.release_date.to_s.first(4) %></strong>
+                  </p>
+                <% end %>
+              </div>
+
+              <p class="flip-help">
+                Clique pour revenir à la carte
+              </p>
+            </div>
           </div>
 
           <audio class="card-audio" src="<%= playlist.song.preview_url %>" preload="auto"></audio>
@@ -246,8 +252,6 @@
         </div>
       <% end %>
     </div>
-
-    <div class="swipe-hint">← dislike &nbsp;&nbsp; like →</div>
   <% else %>
     <div class="done-screen">
       <h2>That's it! 🎉</h2>
@@ -255,7 +259,6 @@
     </div>
   <% end %>
 
-  <%# --- Share bottom sheet --- %>
   <div class="share-sheet" data-share-sheet-target="sheet" hidden>
     <div class="share-sheet__backdrop" data-action="share-sheet#close"></div>
     <div class="share-sheet__panel" data-share-sheet-target="panel">
@@ -333,6 +336,7 @@
 
     window.flipCard = function (event, element) {
       if (event.target.closest('.swipe-buttons')) return;
+      if (event.target.closest('.card-actions')) return;
       element.classList.toggle('is-flipped');
     };
 
