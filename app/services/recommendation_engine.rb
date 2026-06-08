@@ -17,11 +17,15 @@ class RecommendationEngine
   # Share of cards drawn from the user's explicit seed selection.
   SEED_SHARE = 0.7
 
-  def initialize(access_token:, filters:)
+  # How long before we re-fetch top tracks from Spotify.
+  TRACKS_TTL = 6.hours
+
+  def initialize(access_token:, filters:, user: nil)
     @spotify = SpotifyService.new(access_token)
     @lastfm  = LastfmService.new
     @deezer  = DeezerService.new
     @filters = filters
+    @user    = user
   end
 
   def build(suggestion)
@@ -51,10 +55,19 @@ class RecommendationEngine
     @filters[:discovery].present?
   end
 
+  # Returns the user's Spotify top tracks, using the DB cache when fresh.
+  def cached_top_tracks(limit: 50, time_range: "medium_term")
+    if @user&.top_tracks.present? && @user.spotify_cache_refreshed_at&.>(TRACKS_TTL.ago)
+      @user.top_tracks.first(limit)
+    else
+      @spotify.top_tracks(limit: limit, time_range: time_range)
+    end
+  end
+
   # Artists already in the user's Spotify listening, to exclude in discovery mode.
   def known_artists
     names = Set.new
-    @spotify.top_tracks(limit: 50, time_range: @filters[:time_range]).each do |t|
+    cached_top_tracks(limit: 50, time_range: @filters[:time_range]).each do |t|
       names << t.dig("artists", 0, "name").to_s.downcase
     end
     @spotify.top_artists(limit: 50).each { |a| names << a["name"].to_s.downcase }
@@ -64,8 +77,14 @@ class RecommendationEngine
   end
 
   # "artist|title" keys of the user's liked songs, to exclude when asked.
+  # Cached per user in Solid Cache for 6 hours to avoid re-fetching 1000 songs.
   def liked_keys
-    @spotify.liked_track_keys
+    cache_key = @user ? "liked_keys:user:#{@user.id}" : nil
+    if cache_key
+      Rails.cache.fetch(cache_key, expires_in: 6.hours) { @spotify.liked_track_keys }
+    else
+      @spotify.liked_track_keys
+    end
   rescue StandardError
     Set.new
   end
@@ -114,7 +133,7 @@ class RecommendationEngine
   end
 
   def personal_seed_threads(raw, mutex)
-    top_tracks = @spotify.top_tracks(limit: 50, time_range: @filters[:time_range])
+    top_tracks = cached_top_tracks(limit: 50, time_range: @filters[:time_range])
 
     top_tracks.map do |track|
       Thread.new do
