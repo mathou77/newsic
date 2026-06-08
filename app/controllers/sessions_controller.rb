@@ -12,7 +12,7 @@ class SessionsController < ApplicationController
     session[:refresh_token]    = auth['credentials']['refresh_token']
     session[:token_expires_at] = auth['credentials']['expires_at']
 
-    capture_tastes(user, session[:access_token])
+    sync_spotify_profile(user, session[:access_token])
 
     redirect_to suggestions_path, notice: "Connecté en tant que #{user.display_name}"
   end
@@ -28,21 +28,26 @@ class SessionsController < ApplicationController
 
   private
 
-  # Snapshot the user's top artists/genres so profiles can show tastes even
-  # for users who aren't the one currently logged in. Best-effort: never block
-  # login if Spotify is slow or errors.
-  def capture_tastes(user, token)
+  # Snapshots top artists, top genres, and top tracks from Spotify so they're
+  # available immediately on every page without a live API call. Best-effort:
+  # never blocks login if Spotify is slow or errors.
+  def sync_spotify_profile(user, token)
     return if token.blank?
 
-    artists = SpotifyService.new(token).top_artists(limit: 20)
+    spotify = SpotifyService.new(token)
+    artists = spotify.top_artists(limit: 20)
     return if artists.blank?
 
+    top_tracks = spotify.top_tracks(limit: 50) rescue []
+
     user.update(
-      top_artists: artists.first(8).map { |a| a["name"] }.compact,
-      top_genres:  artists.flat_map { |a| a["genres"] || [] }
-                          .tally.sort_by { |_g, n| -n }.first(6).map(&:first)
+      top_artists:               artists.first(8).map { |a| a["name"] }.compact,
+      top_genres:                artists.flat_map { |a| a["genres"] || [] }
+                                        .tally.sort_by { |_g, n| -n }.first(6).map(&:first),
+      top_tracks:                top_tracks,
+      spotify_cache_refreshed_at: Time.current
     )
   rescue => e
-    Rails.logger.warn("capture_tastes failed: #{e.message}")
+    Rails.logger.warn("sync_spotify_profile failed: #{e.message}")
   end
 end
