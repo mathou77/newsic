@@ -1,0 +1,83 @@
+<%# Single notification row rendered inside the panel. %>
+<div id="notification_<%= notification.id %>" class="notif notif--<%= notification.kind %><%= " notif--unread" if notification.unread? %>">
+  <% actor = notification.actor %>
+
+  <% if actor.avatar_url.present? %>
+    <img src="<%= actor.avatar_url %>" class="notif__avatar" alt="">
+  <% else %>
+    <span class="notif__avatar notif__avatar--initials"><%= actor.initials %></span>
+  <% end %>
+
+  <div class="notif__content">
+    <% case notification.kind %>
+
+    <% when "friend_request" %>
+      <p class="notif__text"><strong><%= actor.display_name %></strong> veut être ton ami</p>
+      <div class="notif__actions">
+        <%= button_to "Accepter", accept_notification_path(notification),
+              class: "notif-btn notif-btn--accept",
+              data: { turbo_stream: true } %>
+        <%= button_to "Décliner", decline_notification_path(notification),
+              class: "notif-btn notif-btn--decline",
+              data: { turbo_stream: true } %>
+      </div>
+
+    <% when "message" %>
+      <% msg = notification.notifiable %>
+      <p class="notif__text">
+        <strong><%= actor.display_name %></strong>
+        <% if msg&.shared_track? %>
+          t'a partagé une musique
+        <% else %>
+          t'a envoyé un message
+        <% end %>
+      </p>
+      <% if msg&.body.present? %>
+        <p class="notif__preview">"<%= truncate(msg.body, length: 60) %>"</p>
+      <% end %>
+      <div class="notif__actions">
+        <%= link_to "Voir la conversation",
+              conversation_path(notification.conversation_id),
+              class: "notif-btn notif-btn--primary",
+              data: { turbo_frame: "_top" } %>
+        <button type="button" class="notif-btn notif-btn--ghost"
+                data-action="notifications#toggleReply"
+                data-notifications-target="replyToggle"
+                data-notif-id="<%= notification.id %>">
+          Répondre
+        </button>
+      </div>
+      <div class="notif__reply" data-notifications-target="replyForm" data-notif-id="<%= notification.id %>" hidden>
+        <%= form_with url: reply_notification_path(notification), data: { turbo_stream: true } do |f| %>
+          <%= f.text_field :body, placeholder: "Répondre…", class: "notif__reply-input", autofocus: false %>
+          <%= f.submit "Envoyer", class: "notif-btn notif-btn--primary" %>
+        <% end %>
+      </div>
+
+    <% when "reaction" %>
+      <% reaction = notification.notifiable %>
+      <p class="notif__text">
+        <strong><%= actor.display_name %></strong> a réagi
+        <% if reaction %>
+          <%= reaction.emoji %>
+        <% end %>
+        à ton message
+      </p>
+      <div class="notif__actions">
+        <%= link_to "Voir",
+              conversation_path(notification.conversation_id),
+              class: "notif-btn notif-btn--primary",
+              data: { turbo_frame: "_top" } %>
+      </div>
+
+    <% end %>
+
+    <span class="notif__time"><%= time_ago_in_words(notification.created_at) %></span>
+  </div>
+
+  <%= button_to mark_read_notification_path(notification), method: :patch,
+        class: "notif__dismiss", title: "Marquer comme lu",
+        data: { turbo_stream: true } do %>
+    <i class="fa-solid fa-xmark"></i>
+  <% end %>
+</div>

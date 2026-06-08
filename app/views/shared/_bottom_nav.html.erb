@@ -8,6 +8,17 @@
     <%= image_tag "logo-orb.png", alt: "Découvrir" %>
   <% end %>
 
+  <button type="button" class="bottom-nav-item bottom-nav-bell"
+          data-action="notifications#toggle"
+          data-controller-scope="notifications_panel">
+    <span class="bottom-nav-bell__icon">
+      <i class="fa-solid fa-bell"></i>
+      <%= render "notifications/badge",
+            count: Notification.badge_count_for(current_user) %>
+    </span>
+    <span>Notifs</span>
+  </button>
+
   <%= link_to conversations_path, class: "bottom-nav-item" do %>
     <i class="fa-solid fa-comment-dots"></i>
     <span>Messages</span>

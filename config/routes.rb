@@ -31,6 +31,14 @@ Rails.application.routes.draw do
   resources :messages, only: [] do
     resources :reactions, only: [:create], controller: "message_reactions"
   end
+  resources :notifications, only: [] do
+    member do
+      patch :mark_read
+      post  :accept
+      post  :decline
+      post  :reply
+    end
+  end
   resources :songs, only: [:show]
   resources :shares, only: [:create]
 

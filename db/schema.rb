@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_08_151130) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_08_155302) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -57,6 +57,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_08_151130) do
     t.index ["conversation_id"], name: "index_messages_on_conversation_id"
     t.index ["song_id"], name: "index_messages_on_song_id"
     t.index ["user_id"], name: "index_messages_on_user_id"
+  end
+
+  create_table "notifications", force: :cascade do |t|
+    t.bigint "actor_id", null: false
+    t.bigint "conversation_id"
+    t.datetime "created_at", null: false
+    t.integer "kind", default: 0, null: false
+    t.bigint "notifiable_id"
+    t.string "notifiable_type"
+    t.datetime "read_at"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["actor_id"], name: "index_notifications_on_actor_id"
+    t.index ["conversation_id"], name: "index_notifications_on_conversation_id"
+    t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable"
+    t.index ["user_id", "read_at"], name: "index_notifications_on_user_id_and_read_at"
+    t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
   create_table "playlists", force: :cascade do |t|
@@ -133,6 +150,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_08_151130) do
   add_foreign_key "messages", "conversations"
   add_foreign_key "messages", "songs"
   add_foreign_key "messages", "users"
+  add_foreign_key "notifications", "users"
+  add_foreign_key "notifications", "users", column: "actor_id"
   add_foreign_key "playlists", "songs"
   add_foreign_key "playlists", "suggestions"
   add_foreign_key "suggestions", "users"

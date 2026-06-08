@@ -7,6 +7,8 @@ class Friendship < ApplicationRecord
   validates :requester_id, uniqueness: { scope: :addressee_id }
   validate  :not_self
 
+  after_create_commit :notify_addressee
+
   # The friendship between two users, regardless of who sent the request.
   def self.between(a, b)
     where(requester: a, addressee: b).or(where(requester: b, addressee: a)).first
@@ -21,5 +23,16 @@ class Friendship < ApplicationRecord
 
   def not_self
     errors.add(:addressee, "ne peut pas être soi-même") if requester_id == addressee_id
+  end
+
+  def notify_addressee
+    Notification.create!(
+      user:       addressee,
+      actor:      requester,
+      notifiable: self,
+      kind:       :friend_request
+    )
+  rescue => e
+    Rails.logger.warn("Friendship notification failed: #{e.message}")
   end
 end
