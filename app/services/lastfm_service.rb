@@ -14,42 +14,44 @@ class LastfmService
   end
 
   def top_tracks_by_tag(tag, limit: 20)
-    response = HTTParty.get(BASE_URL, query:
-    {
-      method: "tag.getTopTracks",
-      tag: tag,
-      api_key: @api_key,
-      format: "json",
-      limit: limit
-    })
-    response.dig("tracks", "track") || []
+    Rails.cache.fetch("lastfm:tag:#{tag}:#{limit}", expires_in: 7.days) do
+      response = HTTParty.get(BASE_URL, query: {
+        method: "tag.getTopTracks",
+        tag: tag,
+        api_key: @api_key,
+        format: "json",
+        limit: limit
+      })
+      response.dig("tracks", "track") || []
+    end
   end
 
   def artist_top_tracks(artist, limit: 20)
-    response = HTTParty.get(BASE_URL, query:
-    {
-      method: "artist.getTopTracks",
-      artist: artist,
-      api_key: @api_key,
-      format: "json",
-      limit: limit
-    })
-
-    response.dig("toptracks", "track") || []
+    Rails.cache.fetch("lastfm:artist:#{artist.to_s.downcase}:#{limit}", expires_in: 7.days) do
+      response = HTTParty.get(BASE_URL, query: {
+        method: "artist.getTopTracks",
+        artist: artist,
+        api_key: @api_key,
+        format: "json",
+        limit: limit
+      })
+      response.dig("toptracks", "track") || []
+    end
   end
 
   def similar_tracks(artist:, track:, limit: 20)
-    response = HTTParty.get(BASE_URL, query:
-    {
-      method: "track.getSimilar",
-      artist: artist,
-      track: track,
-      api_key: @api_key,
-      format: "json",
-      limit: limit
-    })
-
-    response.dig("similartracks", "track") || []
+    key = "lastfm:similar:#{artist.to_s.downcase}:#{track.to_s.downcase}:#{limit}"
+    Rails.cache.fetch(key, expires_in: 7.days) do
+      response = HTTParty.get(BASE_URL, query: {
+        method: "track.getSimilar",
+        artist: artist,
+        track: track,
+        api_key: @api_key,
+        format: "json",
+        limit: limit
+      })
+      response.dig("similartracks", "track") || []
+    end
   end
 
   def tracks_by_mood(mood, limit: 20)

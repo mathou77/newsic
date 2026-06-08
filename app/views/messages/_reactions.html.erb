@@ -9,9 +9,10 @@
       <% end %>
     </div>
   <% end %>
-  <div class="reaction-buttons">
+  <button type="button" class="reaction-trigger" data-action="reaction#togglePicker" aria-label="Réagir">😊</button>
+  <div class="reaction-picker" data-reaction-target="picker">
     <% MessageReaction::EMOJIS.each do |emoji| %>
-      <button type="button" class="reaction-btn" data-action="reaction#toggle" data-emoji="<%= emoji %>"><%= emoji %></button>
+      <button type="button" class="reaction-btn" data-action="reaction#pick" data-emoji="<%= emoji %>"><%= emoji %></button>
     <% end %>
   </div>
 </div>

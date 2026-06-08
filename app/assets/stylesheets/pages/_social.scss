@@ -580,9 +580,10 @@ $msg-bg: #0a0a1a;
 
 // --- Reactions --------------------------------------------------------------
 .reactions {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-top: 4px;
 }
 
@@ -597,23 +598,54 @@ $msg-bg: #0a0a1a;
   background: rgba($white, 0.08);
 }
 
-.reaction-buttons {
-  display: flex;
-  gap: 2px;
-  opacity: 0.55; // always tappable on mobile (no hover)
+// Petit bouton déclencheur, visible au survol du message
+.reaction-trigger {
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 8px;
+  opacity: 0;
   transition: opacity 0.15s ease;
+  line-height: 1;
+
+  &:hover { background: rgba($white, 0.1); }
 }
-.msg:hover .reaction-buttons { opacity: 1; }
+.msg:hover .reaction-trigger { opacity: 0.55; }
+.reaction-trigger:focus-visible { opacity: 1; }
+
+// Le sélecteur d'emojis : caché par défaut, flottant au-dessus des messages
+.reaction-picker {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  background: #2a2a2a;
+  border: 1px solid rgba($white, 0.12);
+  border-radius: 12px;
+  padding: 6px 8px;
+  gap: 2px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+
+  &--open { display: flex; }
+}
+
+.msg--mine .reaction-picker {
+  left: auto;
+  right: 0;
+}
 
 .reaction-btn {
   border: none;
   background: transparent;
-  font-size: 15px;
+  font-size: 18px;
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 4px 6px;
   border-radius: 8px;
 
-  &:hover { background: rgba($white, 0.1); }
+  &:hover { background: rgba($white, 0.12); }
 }
 
 // --- Input bar (music note + orange send) -----------------------------------

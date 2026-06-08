@@ -48,7 +48,7 @@ Rails.application.configure do
   config.active_support.report_deprecations = false
 
   # Use memory cache store (Solid Cache requires separate DB config)
-  config.cache_store = :memory_store
+  config.cache_store = :solid_cache_store
 
   # Use async adapter for Active Job (Solid Queue requires separate DB config)
   config.active_job.queue_adapter = :async
