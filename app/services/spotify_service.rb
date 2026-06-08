@@ -44,9 +44,17 @@ class SpotifyService
     keys
   end
 
+  def playlist_exists?(playlist_id)
+    return false if playlist_id.blank?
+    response = HTTParty.get("#{BASE_URL}/playlists/#{playlist_id}",
+      headers: { "Authorization" => "Bearer #{@access_token}" }
+    )
+    response.code == 200
+  end
+
   def find_or_create_playlist(existing_id: nil, name: "Newsic")
-    return existing_id if existing_id.present?
-    create_playlist(name: name)
+  return existing_id if playlist_exists?(existing_id)
+  create_playlist(name: name)
   end
 
   def create_playlist(name: "Newsic")
