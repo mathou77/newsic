@@ -46,11 +46,20 @@ class SuggestionsController < ApplicationController
   end
 
   def save_to_spotify
-    suggestion   = Suggestion.find(params[:id])
-    spotify_ids  = suggestion.playlists.liked.includes(:song).filter_map { |p| p.song.spotify_id }
+    suggestion = Suggestion.find(params[:id])
+    spotify    = SpotifyService.new(session[:access_token])
+    playlists  = suggestion.playlists.liked.includes(:song)
+
+    spotify_ids = playlists.filter_map do |p|
+      song = p.song
+      # Utilise l'ID déjà connu, sinon cherche sur Spotify par artiste + titre
+      id = song.spotify_id.presence || spotify.search_track_id(artist: song.artist, title: song.title)
+      # Met en cache pour ne pas re-chercher la prochaine fois
+      song.update_column(:spotify_id, id) if id && song.spotify_id.blank?
+      id
+    end
 
     if spotify_ids.any?
-      spotify     = SpotifyService.new(session[:access_token])
       existing_id = current_user.spotify_playlist_id.presence || session[:newsic_playlist_id].presence
       playlist_id = spotify.find_or_create_playlist(existing_id: existing_id)
       current_user.update_column(:spotify_playlist_id, playlist_id)

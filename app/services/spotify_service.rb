@@ -46,29 +46,10 @@ class SpotifyService
 
   def playlist_exists?(playlist_id)
     return false if playlist_id.blank?
-
-    # Vérifie que la playlist existe ET que l'utilisateur la suit encore
     response = HTTParty.get("#{BASE_URL}/playlists/#{playlist_id}",
       headers: { "Authorization" => "Bearer #{@access_token}" }
     )
-    return false unless response.code == 200
-
-    # Récupère l'ID de l'utilisateur courant
-    me = HTTParty.get("#{BASE_URL}/me",
-      headers: { "Authorization" => "Bearer #{@access_token}" }
-    )
-    user_id = me["id"]
-    return false unless user_id
-
-    # Vérifie si l'utilisateur suit la playlist
-    follow_response = HTTParty.get(
-      "#{BASE_URL}/playlists/#{playlist_id}/followers/contains",
-      headers: { "Authorization" => "Bearer #{@access_token}" },
-      query: { ids: user_id }
-    )
-    follow_response.code == 200 && follow_response.parsed_response&.first == true
-  rescue StandardError
-    false
+    response.code == 200
   end
 
   def find_or_create_playlist(existing_id: nil, name: "Newsic")
@@ -101,11 +82,8 @@ class SpotifyService
     uris = ids.map { |id| "spotify:track:#{id}" }
     HTTParty.post(
       "#{BASE_URL}/playlists/#{playlist_id}/items",
-      headers: {
-        "Authorization" => "Bearer #{@access_token}",
-        "Content-Type"  => "application/json"
-      },
-      body: { uris: uris }.to_json
+      headers: { "Authorization" => "Bearer #{@access_token}" },
+      query:   { uris: uris.join(",") }
     )
   end
 
