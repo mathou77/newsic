@@ -1,0 +1,26 @@
+<%# Notification slide-up panel — controlled by the notifications Stimulus controller. %>
+<div id="notifications_panel"
+     class="notif-panel">
+
+  <div class="notif-panel__backdrop" data-action="click->notifications#close"></div>
+
+  <div class="notif-panel__sheet">
+    <div class="notif-panel__header">
+      <h2 class="notif-panel__title">Notifications</h2>
+      <button type="button" class="notif-panel__close" data-action="notifications#close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="notif-panel__body">
+      <div id="notifications_list">
+        <% notifications.each do |n| %>
+          <%= render "notifications/notification", notification: n %>
+        <% end %>
+        <% if notifications.empty? %>
+          <p class="notif-panel__empty">Aucune notification</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

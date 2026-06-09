@@ -19,11 +19,20 @@
     <%= javascript_importmap_tags %>
   </head>
 
-    <body>
-    <div class="mobile-app">
-      <%= yield %>
-      <%= render "shared/bottom_nav" if user_signed_in? && !content_for?(:no_bottom_nav) %>
-    </div>
+  <body>
+    <% if user_signed_in? %>
+      <div class="mobile-app" data-controller="notifications">
+        <%= turbo_stream_from "notifications:#{current_user.id}" %>
+        <%= render "notifications/panel",
+              notifications: current_user.notifications.unread.recent %>
+        <%= yield %>
+        <%= render "shared/bottom_nav" unless content_for?(:no_bottom_nav) %>
+      </div>
+    <% else %>
+      <div class="mobile-app">
+        <%= yield %>
+      </div>
+    <% end %>
   </body>
 
 </html>

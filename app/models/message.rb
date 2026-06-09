@@ -16,6 +16,7 @@ class Message < ApplicationRecord
       partial: "messages/message",
       locals: { message: self }
     )
+    notify_recipient
   end
 
   def sender?(other_user)
@@ -35,5 +36,20 @@ class Message < ApplicationRecord
 
   def body_or_song_present
     errors.add(:base, "Message vide") if body.blank? && song_id.blank?
+  end
+
+  def notify_recipient
+    recipient = conversation.other_than(user)
+    return unless recipient
+
+    Notification.create!(
+      user:            recipient,
+      actor:           user,
+      notifiable:      self,
+      kind:            :message,
+      conversation_id: conversation_id
+    )
+  rescue => e
+    Rails.logger.warn("Message notification failed: #{e.message}")
   end
 end

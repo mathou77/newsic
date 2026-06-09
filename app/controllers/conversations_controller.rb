@@ -12,6 +12,11 @@ class ConversationsController < ApplicationController
     @messages = @conversation.messages.includes(:user)
     @other    = @conversation.other_than(current_user)
     @message  = Message.new
+
+    # Mark all message/reaction notifications for this conversation as read.
+    current_user.notifications.unread
+                .where(conversation_id: @conversation.id)
+                .find_each(&:read!)
   end
 
   # Start (or reopen) a conversation with a friend.

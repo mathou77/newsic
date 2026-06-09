@@ -1,0 +1,281 @@
+// ── Notification badge (red dot on the bell) ─────────────────────────────────
+
+.bottom-nav-bell {
+  position: relative;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+
+  &__icon {
+    position: relative;
+    display: inline-block;
+    font-size: 20px;
+  }
+}
+
+.notif-badge {
+  position: absolute;
+  top: -5px;
+  right: -7px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #e8323a;
+  color: $white;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+
+  &--hidden {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
+// ── Slide-up notification panel ───────────────────────────────────────────────
+
+.notif-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+
+  &--open {
+    pointer-events: auto;
+  }
+}
+
+.notif-panel__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  transition: background 0.3s ease;
+
+  .notif-panel--open & {
+    background: rgba(0, 0, 0, 0.55);
+  }
+}
+
+.notif-panel__sheet {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  width: 100%;
+  max-width: 430px;
+  max-height: 80vh;
+  border-radius: 24px 24px 0 0;
+  background: #111018;
+  border-top: 1px solid rgba($white, 0.1);
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.6);
+  transition: transform 0.35s cubic-bezier(0.32, 0, 0.67, 0);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .notif-panel--open & {
+    transform: translateX(-50%) translateY(0);
+    transition-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+  }
+}
+
+.notif-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid rgba($white, 0.07);
+  flex-shrink: 0;
+}
+
+.notif-panel__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: $white;
+  margin: 0;
+}
+
+.notif-panel__close {
+  border: none;
+  background: rgba($white, 0.08);
+  color: rgba($white, 0.7);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 13px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+
+  &:hover { background: rgba($white, 0.15); }
+}
+
+.notif-panel__body {
+  overflow-y: auto;
+  flex: 1;
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+.notif-panel__empty {
+  color: rgba($white, 0.4);
+  text-align: center;
+  padding: 40px 20px;
+  font-size: 14px;
+}
+
+// ── Individual notification row ────────────────────────────────────────────────
+
+.notif {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba($white, 0.06);
+  position: relative;
+  transition: background 0.15s ease;
+
+  &--unread {
+    background: rgba($violet-500, 0.07);
+  }
+
+  &--sent {
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    color: rgba($white, 0.6);
+    font-size: 13px;
+    padding: 14px;
+  }
+}
+
+.notif__sent-icon {
+  color: #4caf50;
+  font-size: 16px;
+}
+
+.notif__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+
+  &--initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba($violet-500, 0.4);
+    color: $white;
+    font-size: 14px;
+    font-weight: 600;
+  }
+}
+
+.notif__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif__text {
+  font-size: 13px;
+  color: rgba($white, 0.85);
+  margin: 0 0 4px;
+  line-height: 1.4;
+
+  strong { color: $white; }
+}
+
+.notif__preview {
+  font-size: 12px;
+  color: rgba($white, 0.5);
+  margin: 0 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notif__time {
+  display: block;
+  font-size: 11px;
+  color: rgba($white, 0.35);
+  margin-top: 6px;
+}
+
+.notif__actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.notif__reply {
+  margin-top: 10px;
+
+  form {
+    display: flex;
+    gap: 6px;
+  }
+
+  &-input {
+    flex: 1;
+    background: rgba($white, 0.08);
+    border: 1px solid rgba($white, 0.12);
+    border-radius: 20px;
+    color: $white;
+    padding: 6px 14px;
+    font-size: 13px;
+
+    &:focus {
+      outline: none;
+      border-color: rgba($violet-500, 0.6);
+    }
+  }
+}
+
+.notif__dismiss {
+  border: none;
+  background: transparent;
+  color: rgba($white, 0.3);
+  padding: 4px 6px;
+  cursor: pointer;
+  font-size: 13px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+
+  &:hover { color: rgba($white, 0.7); }
+
+  // button_to wraps in a form — strip the form styles
+  form { margin: 0; }
+}
+
+// ── Notification action buttons ────────────────────────────────────────────────
+
+.notif-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: opacity 0.15s ease;
+
+  &:hover { opacity: 0.85; }
+
+  // button_to forms
+  form { margin: 0; }
+  button { all: inherit; cursor: pointer; }
+
+  &--accept  { background: $orange; color: $white; }
+  &--decline { background: rgba($white, 0.1); color: rgba($white, 0.7); }
+  &--primary { background: rgba($violet-500, 0.35); color: $white; border: 1px solid rgba($violet-500, 0.5); }
+  &--ghost   { background: rgba($white, 0.08); color: rgba($white, 0.6); }
+}
