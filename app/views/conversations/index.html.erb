@@ -4,18 +4,17 @@
     <div class="msg-brand">
       <%= image_tag "logo-orb.png", class: "msg-brand__logo", alt: "Newsic" %>
       <span class="msg-brand__name">NEWSIC</span>
-      <span class="msg-brand__tagline">Discover, share &amp; vibe</span>
     </div>
     <%= link_to users_path, class: "msg-header__icon" do %><i class="fa-solid fa-plus"></i><% end %>
   </header>
 
   <nav class="msg-tabs">
-    <button class="msg-tab is-active" data-tabs-target="tab" data-tab="all" data-action="tabs#select">All</button>
+    <button class="msg-tab is-active" data-tabs-target="tab" data-tab="all" data-action="tabs#select">Tous</button>
     <button class="msg-tab" data-tabs-target="tab" data-tab="friends" data-action="tabs#select">
-      Friends <% if @friends.any? %><span class="msg-tab__badge"><%= @friends.size %></span><% end %>
+      Amis <% if @friends.any? %><span class="msg-tab__badge"><%= @friends.size %></span><% end %>
     </button>
     <button class="msg-tab" data-tabs-target="tab" data-tab="requests" data-action="tabs#select">
-      Requests <% if @pending.any? %><span class="msg-tab__badge msg-tab__badge--alert"><%= @pending.size %></span><% end %>
+      Demandes <% if @pending.any? %><span class="msg-tab__badge msg-tab__badge--alert"><%= @pending.size %></span><% end %>
     </button>
   </nav>
 
