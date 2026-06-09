@@ -658,6 +658,17 @@
     document.addEventListener('turbo:load', initPage);
     document.addEventListener('DOMContentLoaded', initPage);
 
+    document.addEventListener('turbo:before-cache', function() {
+      const container = document.querySelector('.swipe-container');
+      if (!container) return;
+      delete container.dataset.swipeReady;
+      document.querySelectorAll('.card-audio').forEach(a => { a.pause(); a.currentTime = 0; });
+      playerPaused = false;
+      window.__newsicAudioUnlocked = false;
+      const overlay = document.getElementById('tap-overlay');
+      if (overlay) overlay.style.display = '';
+    });
+
     function initSeedSearch() {
       const root = document.getElementById('seed-search');
       if (!root) return;
