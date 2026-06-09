@@ -642,14 +642,16 @@
       const active = document.querySelector('.swipe-card.active');
 
       if (active) {
-        active.querySelector('.card-audio').play().then(() => {
+        const cardAudio = active.querySelector('.card-audio');
+        cardAudio.addEventListener('playing', function() {
+          if (window.__newsicAudioUnlocked) return;
           window.__newsicAudioUnlocked = true;
           if (overlay) overlay.style.display = 'none';
-          // Initialise la barre de progression sur la première card
-          const { audio, fill } = getActiveBar();
-          if (audio && fill) bindProgressBar(audio, fill);
+          const { fill } = getActiveBar();
+          if (fill) bindProgressBar(cardAudio, fill);
           updatePlayerIcon();
-        }).catch(() => {});
+        }, { once: true });
+        cardAudio.play().catch(() => {});
       }
 
       initSeedSearch();
