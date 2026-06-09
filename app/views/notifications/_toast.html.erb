@@ -1,0 +1,57 @@
+<div id="toast_<%= notification.id %>"
+     class="notif-toast"
+     data-controller="toast"
+     data-toast-duration-value="<%= notification.friend_request? ? 0 : 4500 %>">
+
+  <% actor = notification.actor %>
+
+  <div class="notif-toast__avatar">
+    <% if actor.avatar_url.present? %>
+      <%= image_tag actor.avatar_url, class: "notif-toast__img" %>
+    <% else %>
+      <span class="notif-toast__initials"><%= actor.display_name.to_s[0].upcase %></span>
+    <% end %>
+  </div>
+
+  <div class="notif-toast__body">
+    <p class="notif-toast__title">
+      <% case notification.kind %>
+      <% when "message" %>
+        <strong><%= actor.display_name %></strong> t'a envoyé un message
+      <% when "friend_request" %>
+        <strong><%= actor.display_name %></strong> veut être ton ami
+      <% when "reaction" %>
+        <strong><%= actor.display_name %></strong> a réagi à ton message
+      <% end %>
+    </p>
+
+    <% if notification.message? && notification.notifiable&.body.present? %>
+      <p class="notif-toast__preview"><%= notification.notifiable.body.to_s.truncate(60) %></p>
+    <% end %>
+
+    <% if notification.friend_request? %>
+      <div class="notif-toast__actions">
+        <%= button_to "Accepter", accept_notification_path(notification),
+              class: "notif-btn notif-btn--accept",
+              data: { turbo_stream: true } %>
+        <%= button_to "Décliner", decline_notification_path(notification),
+              class: "notif-btn notif-btn--decline",
+              data: { turbo_stream: true } %>
+      </div>
+    <% end %>
+  </div>
+
+  <% unless notification.friend_request? %>
+    <% url = notification.conversation_id ? conversation_path(notification.conversation_id) : conversations_path %>
+    <%= link_to url, class: "notif-toast__link" do %>
+      <span class="sr-only">Voir</span>
+    <% end %>
+  <% end %>
+
+  <%= button_to mark_read_notification_path(notification), method: :patch,
+        class: "notif-toast__close",
+        aria: { label: "Fermer" },
+        data: { turbo_stream: true } do %>
+    <i class="fa-solid fa-xmark"></i>
+  <% end %>
+</div>
