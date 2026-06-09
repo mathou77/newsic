@@ -55,18 +55,19 @@ class Notification < ApplicationRecord
   end
 
   def push_title
-    case kind
-    when "message"        then "Nouveau message de #{actor.display_name}"
-    when "friend_request" then "#{actor.display_name} veut être ton ami"
-    when "reaction"       then "#{actor.display_name} a réagi à ton message"
-    end
+    actor.display_name
   end
 
   def push_body
     case kind
-    when "message"  then notifiable&.body.to_s.truncate(80)
-    when "reaction" then notifiable&.emoji.to_s
-    else ""
+    when "message"
+      if notifiable&.song.present?
+        "A partagé \"#{notifiable.song.title}\" par #{notifiable.song.artist}"
+      else
+        notifiable&.body.to_s.truncate(80)
+      end
+    when "friend_request" then "A envoyé une demande d'ami"
+    when "reaction"       then "A réagi à votre message #{notifiable&.emoji}"
     end
   end
 

@@ -4,30 +4,35 @@
      data-toast-duration-value="<%= notification.friend_request? ? 0 : 4500 %>">
 
   <% actor = notification.actor %>
+  <% msg   = notification.notifiable %>
 
-  <div class="notif-toast__avatar">
+  <%# Avatar with Newsic logo badge %>
+  <div class="notif-toast__avatar-wrap">
     <% if actor.avatar_url.present? %>
-      <%= image_tag actor.avatar_url, class: "notif-toast__img" %>
+      <%= image_tag actor.avatar_url, class: "notif-toast__img", alt: "" %>
     <% else %>
-      <span class="notif-toast__initials"><%= actor.display_name.to_s[0].upcase %></span>
+      <span class="notif-toast__initials"><%= actor.initials %></span>
     <% end %>
+    <%= image_tag "logo-orb.png", class: "notif-toast__newsic-badge", alt: "" %>
   </div>
 
   <div class="notif-toast__body">
-    <p class="notif-toast__title">
+    <p class="notif-toast__name"><%= actor.display_name %></p>
+
+    <p class="notif-toast__action">
       <% case notification.kind %>
       <% when "message" %>
-        <strong><%= actor.display_name %></strong> t'a envoyé un message
+        <% if msg&.song.present? %>
+          A partagé "<%= msg.song.title %>" par <%= msg.song.artist %>
+        <% elsif msg&.body.present? %>
+          <%= msg.body.truncate(80) %>
+        <% end %>
       <% when "friend_request" %>
-        <strong><%= actor.display_name %></strong> veut être ton ami
+        A envoyé une demande d'ami
       <% when "reaction" %>
-        <strong><%= actor.display_name %></strong> a réagi à ton message
+        A réagi à votre message <%= msg&.emoji %>
       <% end %>
     </p>
-
-    <% if notification.message? && notification.notifiable&.body.present? %>
-      <p class="notif-toast__preview"><%= notification.notifiable.body.to_s.truncate(60) %></p>
-    <% end %>
 
     <% if notification.friend_request? %>
       <div class="notif-toast__actions">
