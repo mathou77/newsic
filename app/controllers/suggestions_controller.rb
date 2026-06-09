@@ -2,6 +2,14 @@ class SuggestionsController < ApplicationController
   before_action :ensure_fresh_spotify_token
 
   def index
+    # Reprend la session en cours si elle a encore des cartes pending
+    ongoing = current_user.suggestions
+                          .joins(:playlists)
+                          .where(playlists: { status: :pending })
+                          .order(created_at: :desc)
+                          .first
+
+    redirect_to suggestion_path(ongoing) if ongoing
   end
 
   def create
