@@ -9,9 +9,8 @@
   <% end %>
 
   <div class="notif__content">
-    <% case notification.kind %>
-
-    <% when "friend_request" %>
+    <% case notification.kind
+       when "friend_request" then %>
       <p class="notif__text"><strong><%= actor.display_name %></strong> veut être ton ami</p>
       <div class="notif__actions">
         <%= button_to "Accepter", accept_notification_path(notification),
@@ -22,7 +21,7 @@
               data: { turbo_stream: true } %>
       </div>
 
-    <% when "message" %>
+    <% when "message" then %>
       <% msg = notification.notifiable %>
       <p class="notif__text">
         <strong><%= actor.display_name %></strong>
@@ -54,7 +53,7 @@
         <% end %>
       </div>
 
-    <% when "reaction" %>
+    <% when "reaction" then %>
       <% reaction = notification.notifiable %>
       <p class="notif__text">
         <strong><%= actor.display_name %></strong> a réagi
