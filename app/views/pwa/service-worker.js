@@ -3,18 +3,21 @@ self.addEventListener("push", (event) => {
 
   const data = event.data.json()
 
-  const options = {
-    body:    data.body,
-    icon:    "/icon.png",
-    badge:   "/icon.png",
-    data:    { url: data.url },
-    actions: data.actions || [],
-    tag:     data.tag || "newsic-notif",
-    renotify: true
-  }
-
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      // App is open and focused — the in-app toast handles it, skip native notification
+      const appFocused = clientList.some((c) => c.focused)
+      if (appFocused) return
+
+      return self.registration.showNotification(data.title, {
+        body:     data.body,
+        icon:     "/icon.png",
+        badge:    "/icon.png",
+        data:     { url: data.url },
+        tag:      data.tag || "newsic-notif",
+        renotify: true
+      })
+    })
   )
 })
 
