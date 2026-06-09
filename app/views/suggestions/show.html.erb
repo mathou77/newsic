@@ -118,7 +118,10 @@
         </label>
       </div>
 
-      <%= submit_tag "Appliquer", class: "btn-apply-filters" %>
+      <div class="filters-actions">
+        <%= submit_tag "Appliquer", class: "btn-apply-filters" %>
+        <button type="button" class="btn-reset-filters" id="btn-reset-filters">Réinitialiser</button>
+      </div>
     <% end %>
   </div>
 
@@ -362,7 +365,6 @@
   (function () {
     if (window.__newsicSwipe) return;
     window.__newsicSwipe = true;
-    window.__newsicAudioUnlocked = false;
 
     let playerPaused = false;
 
@@ -594,6 +596,10 @@
 
       container.dataset.swipeReady = '1';
 
+      // Reset audio unlock state on each page init so the overlay works on every visit
+      window.__newsicAudioUnlocked = false;
+      playerPaused = false;
+
       const overlay = document.getElementById('tap-overlay');
       if (overlay) overlay.addEventListener('click', unlockAudio);
 
@@ -607,6 +613,30 @@
 
       if (filtersClose && filtersPanel) {
         filtersClose.addEventListener('click', () => filtersPanel.classList.remove('open'));
+      }
+
+      const resetBtn = document.getElementById('btn-reset-filters');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          const form = document.querySelector('.filters-form');
+          if (!form) return;
+          // Reset all native inputs
+          form.reset();
+          // Reset hidden decade/tempo inputs and their labels
+          const decadeHidden = document.getElementById('decade-hidden');
+          const tempoHidden  = document.getElementById('tempo-hidden');
+          if (decadeHidden) decadeHidden.value = '';
+          if (tempoHidden)  tempoHidden.value  = '';
+          document.getElementById('decade-label') && (document.getElementById('decade-label').textContent = '');
+          document.getElementById('tempo-label')  && (document.getElementById('tempo-label').textContent  = '');
+          document.getElementById('decade-block')?.classList.remove('is-active');
+          document.getElementById('tempo-block')?.classList.remove('is-active');
+          // Clear seed chips
+          document.getElementById('seed-chips') && (document.getElementById('seed-chips').innerHTML = '');
+          document.getElementById('seed-inputs') && (document.getElementById('seed-inputs').innerHTML = '');
+          // Submit with clean state
+          form.submit();
+        });
       }
 
       const active = document.querySelector('.swipe-card.active');
