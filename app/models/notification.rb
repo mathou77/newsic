@@ -5,12 +5,11 @@ class Notification < ApplicationRecord
 
   enum :kind, { message: 0, friend_request: 1, reaction: 2 }
 
-  scope :unread,  -> { where(read_at: nil) }
-  scope :recent,  -> { order(created_at: :desc).limit(30) }
+  scope :unread, -> { where(read_at: nil) }
+  scope :recent, -> { order(created_at: :desc).limit(30) }
 
-  after_create_commit :broadcast_to_recipient
+  after_create_commit :deliver_notification
 
-  # Badge = unread conversations (messages) + unread friend requests + unread reaction convos.
   def self.badge_count_for(user)
     base = where(user: user, read_at: nil)
     msg  = base.where(kind: :message).select(:conversation_id).distinct.count
@@ -31,16 +30,19 @@ class Notification < ApplicationRecord
 
   private
 
-  def broadcast_to_recipient
-    stream = "notifications:#{user_id}"
+  def deliver_notification
+    broadcast_toast
+    broadcast_badge_update
+    send_web_push
+  end
 
+  def broadcast_toast
     Turbo::StreamsChannel.broadcast_prepend_to(
-      stream,
-      target:  "notifications_list",
-      partial: "notifications/notification",
+      "notifications:#{user_id}",
+      target:  "toast_container",
+      partial: "notifications/toast",
       locals:  { notification: self }
     )
-    broadcast_badge_update
   end
 
   def broadcast_badge_update
@@ -50,5 +52,32 @@ class Notification < ApplicationRecord
       partial: "notifications/badge",
       locals:  { count: Notification.badge_count_for(user) }
     )
+  end
+
+  def push_title
+    case kind
+    when "message"        then "Nouveau message de #{actor.display_name}"
+    when "friend_request" then "#{actor.display_name} veut être ton ami"
+    when "reaction"       then "#{actor.display_name} a réagi à ton message"
+    end
+  end
+
+  def push_body
+    case kind
+    when "message"  then notifiable&.body.to_s.truncate(80)
+    when "reaction" then notifiable&.emoji.to_s
+    else ""
+    end
+  end
+
+  def push_url
+    case kind
+    when "message", "reaction" then conversation_id ? "/conversations/#{conversation_id}" : "/conversations"
+    when "friend_request"      then "/users"
+    end
+  end
+
+  def send_web_push
+    WebPushService.notify(user: user, title: push_title, body: push_body, url: push_url, tag: "newsic-#{kind}")
   end
 end

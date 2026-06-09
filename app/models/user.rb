@@ -15,6 +15,7 @@ class User < ApplicationRecord
   has_many :messages, dependent: :destroy
   has_many :notifications, dependent: :destroy
   has_many :sent_notifications, class_name: "Notification", foreign_key: :actor_id, dependent: :destroy
+  has_many :push_subscriptions, dependent: :destroy
 
   validates :spotify_uid, presence: true, uniqueness: true
   validates :friend_code, uniqueness: true, allow_nil: true

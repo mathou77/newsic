@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_08_155302) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_09_085113) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -86,6 +86,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_08_155302) do
     t.index ["suggestion_id"], name: "index_playlists_on_suggestion_id"
   end
 
+  create_table "push_subscriptions", force: :cascade do |t|
+    t.string "auth", null: false
+    t.datetime "created_at", null: false
+    t.text "endpoint", null: false
+    t.string "p256dh", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_push_subscriptions_on_user_id"
+  end
+
+  create_table "solid_cable_messages", force: :cascade do |t|
+    t.binary "channel", null: false
+    t.bigint "channel_hash", null: false
+    t.datetime "created_at", null: false
+    t.binary "payload", null: false
+    t.index ["channel"], name: "index_solid_cable_messages_on_channel"
+    t.index ["channel_hash"], name: "index_solid_cable_messages_on_channel_hash"
+    t.index ["created_at"], name: "index_solid_cable_messages_on_created_at"
+  end
+
   create_table "solid_cache_entries", force: :cascade do |t|
     t.integer "byte_size", null: false
     t.datetime "created_at", null: false
@@ -154,5 +174,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_08_155302) do
   add_foreign_key "notifications", "users", column: "actor_id"
   add_foreign_key "playlists", "songs"
   add_foreign_key "playlists", "suggestions"
+  add_foreign_key "push_subscriptions", "users"
   add_foreign_key "suggestions", "users"
 end

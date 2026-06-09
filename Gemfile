@@ -78,3 +78,4 @@ group :test do
 end
 
 gem "httparty", "~> 0.24.2"
+gem "web-push", "~> 3.1"
