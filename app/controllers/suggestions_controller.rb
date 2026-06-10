@@ -97,9 +97,10 @@ class SuggestionsController < ApplicationController
       count:        (params[:count].presence || 10).to_i.clamp(5, 50),
       decade:       params[:decade].presence,
       tempo:        TEMPOS.include?(params[:tempo]) ? params[:tempo] : nil,
-      diverse:       params[:diverse].present?,
-      discovery:     params[:discovery].present?,
-      exclude_liked: true,
+      diverse:          params[:diverse].present?,
+      discovery:        params[:discovery].present?,
+      exclude_liked:    true,
+      exclude_disliked: params[:exclude_disliked].present?,
       seed_artists:       clean_seeds(params[:seed_artists]),
       seed_artist_images: Array(params[:seed_artist_images]).map(&:to_s).first(MAX_SEEDS),
       seed_tracks:        clean_seeds(params[:seed_tracks])

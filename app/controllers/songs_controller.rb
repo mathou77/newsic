@@ -18,6 +18,10 @@ class SongsController < ApplicationController
     end
 
     if url.present?
+      # The signed Deezer URL changes (and expires) on every call, so the
+      # browser must NOT cache this redirect — otherwise a song replayed in a
+      # later session reuses a stale, already-expired URL and stays silent.
+      response.headers["Cache-Control"] = "no-store"
       redirect_to url, allow_other_host: true
     else
       head :no_content

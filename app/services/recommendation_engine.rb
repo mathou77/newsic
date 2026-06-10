@@ -35,6 +35,7 @@ class RecommendationEngine
     @artist_counts   = Hash.new(0)
     @known_artists   = discovery? ? known_artists : Set.new
     @liked_keys      = @filters[:exclude_liked] ? liked_keys : Set.new
+    @disliked_ids    = @filters[:exclude_disliked] ? disliked_deezer_ids : Set.new
     @mutex           = Mutex.new
 
     total = @filters[:count]
@@ -85,6 +86,21 @@ class RecommendationEngine
     else
       @spotify.liked_track_keys
     end
+  rescue StandardError
+    Set.new
+  end
+
+  # Deezer ids of tracks the user already disliked in past sessions, so the
+  # "exclude disliked" filter never shows them again.
+  def disliked_deezer_ids
+    return Set.new unless @user
+
+    Song.joins(:playlists)
+        .where(playlists: { status: Playlist.statuses[:disliked], suggestion_id: @user.suggestions.select(:id) })
+        .where.not(deezer_id: nil)
+        .distinct
+        .pluck(:deezer_id)
+        .to_set
   rescue StandardError
     Set.new
   end
@@ -193,6 +209,7 @@ class RecommendationEngine
 
           result = @deezer.search_track(artist: candidate[:artist], title: candidate[:title])
           next unless result && result["preview"].present?
+          next if @disliked_ids.include?(result["id"])
           next unless passes_popularity?(result)
           next unless passes_explicit?(result)
 
