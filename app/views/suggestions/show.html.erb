@@ -125,6 +125,11 @@
             <%= check_box_tag :discovery, "1", @filters[:discovery] %>
             <span>Nouveautés seulement <span style="font-weight: 400; opacity: 0.7;">(exclue les artistes que vous connaissez)</span></span>
           </label>
+
+          <label class="switch">
+            <%= check_box_tag :exclude_disliked, "1", @filters[:exclude_disliked] %>
+            <span>Masquer les titres déjà passés <span style="font-weight: 400; opacity: 0.7;">(exclut les sons que vous avez dislikés)</span></span>
+          </label>
         </div>
 
         <%= submit_tag "Appliquer", class: "btn-apply-filters" %>
@@ -226,7 +231,7 @@
             </div>
           </div>
 
-          <audio class="card-audio" src="<%= preview_song_path(playlist.song) %>" preload="auto"></audio>
+          <audio class="card-audio" data-src="<%= preview_song_path(playlist.song, v: playlist.id) %>" preload="none"></audio>
         </div>
       <% end %>
     </div>

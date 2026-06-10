@@ -5,7 +5,7 @@ export default class extends Controller {
   static values  = { recapUrl: String }
 
   connect() {
-    this.paused        = true  // first card starts paused — user presses play manually
+    this.paused        = false  // start in "playing" state — autoplay if the browser allows it
     this.audioUnlocked = false
     this.isSeeking     = false
     this.startX        = 0
@@ -26,6 +26,22 @@ export default class extends Controller {
 
     this.cardTargets.forEach(card => this.applyCardColor(card))
     this.updatePlayerIcon()
+    this.armUpcoming()
+
+    // Try to autoplay the first card right away. Browsers block sound until the
+    // user has interacted with the page (especially in private mode), so if it's
+    // refused we kick it off on the very first tap/click anywhere — no need to
+    // press play. Once unlocked, every following card plays on its own.
+    this.playCurrentAudio()
+    this._unlockAudio = (e) => {
+      if (this.audioUnlocked) return
+      if (e.target.closest(".player-bar__toggle")) return  // the play/pause button handles itself
+      this.audioUnlocked = true
+      document.removeEventListener("pointerdown", this._unlockAudio)
+      const audio = this.activeCard?.querySelector(".card-audio")
+      if (audio && audio.paused) this.playCurrentAudio()
+    }
+    document.addEventListener("pointerdown", this._unlockAudio)
   }
 
   disconnect() {
@@ -35,6 +51,7 @@ export default class extends Controller {
     document.removeEventListener("touchstart", this._seekTouchStart)
     document.removeEventListener("touchmove",  this._seekTouchMove)
     document.removeEventListener("touchend",   this._seekTouchEnd)
+    document.removeEventListener("pointerdown", this._unlockAudio)
 
     this.stopAllAudio()
   }
@@ -103,6 +120,27 @@ export default class extends Controller {
 
   // ── Audio ─────────────────────────────────────────────────────────────────────
 
+  // Lazily fetch a fresh Deezer link only for the cards about to be played:
+  // the active one and the next in line. The rest stay untouched (preload="none")
+  // until the user reaches them, so we hit Deezer ~2 cards at a time, not all 10.
+  armUpcoming() {
+    const cards  = this.cardTargets
+    const active = this.activeCard
+    if (!active) return
+    const idx = cards.indexOf(active)
+    this.armCard(cards[idx])
+    this.armCard(cards[idx + 1])
+  }
+
+  armCard(card) {
+    if (!card) return
+    const audio = card.querySelector(".card-audio")
+    if (!audio || audio.src || !audio.dataset.src) return  // missing or already armed
+    audio.src     = audio.dataset.src
+    audio.preload = "auto"
+    audio.load()
+  }
+
   stopAllAudio() {
     this.cardTargets.forEach(c => {
       const a = c.querySelector(".card-audio")
@@ -115,6 +153,7 @@ export default class extends Controller {
     this.paused = false
     const card  = this.activeCard
     if (!card) return
+    this.armUpcoming()
     const audio = card.querySelector(".card-audio")
     const fill  = card.querySelector(".player-bar__fill")
     if (fill) fill.style.width = "0%"
@@ -134,9 +173,12 @@ export default class extends Controller {
   }
 
   togglePlayPause() {
+    this.armUpcoming()
     const audio = this.activeCard?.querySelector(".card-audio")
     if (!audio) return
-    if (this.paused) {
+    // Use the element's real state, not our intent: autoplay may have been
+    // blocked, so the icon can say "playing" while the audio is actually paused.
+    if (audio.paused) {
       audio.play().catch(() => {})
       this.audioUnlocked = true
       this.paused = false
