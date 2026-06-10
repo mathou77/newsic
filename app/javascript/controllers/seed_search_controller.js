@@ -66,8 +66,15 @@ export default class extends Controller {
       const chip = document.createElement("span")
       chip.className = "seed-chip"
 
+      if (s.image) {
+        const img = document.createElement("img")
+        img.src = s.image
+        img.alt = ""
+        chip.appendChild(img)
+      }
+
       const txt = document.createElement("span")
-      txt.textContent = (s.kind === "artist" ? "🎤 " : "🎵 ") + s.label
+      txt.textContent = s.image ? s.label : (s.kind === "artist" ? "🎤 " : "🎵 ") + s.label
 
       const btn = document.createElement("button")
       btn.type = "button"
@@ -89,21 +96,32 @@ export default class extends Controller {
     this.resultsTarget.innerHTML = ""
     ;(data.artists || []).forEach(a =>
       this.resultsTarget.appendChild(
-        this.resultRow("🎤", a.name, { kind: "artist", value: a.name, label: a.name })
+        this.resultRow(a.name, a.image, { kind: "artist", value: a.name, label: a.name, image: a.image })
       )
     )
     ;(data.tracks || []).forEach(t => {
       const label = `${t.title} — ${t.artist}`
       this.resultsTarget.appendChild(
-        this.resultRow("🎵", label, { kind: "track", value: `${t.artist}|${t.title}`, label })
+        this.resultRow(label, t.image, { kind: "track", value: `${t.artist}|${t.title}`, label, image: t.image })
       )
     })
   }
 
-  resultRow(emoji, text, seed) {
+  resultRow(text, imageUrl, seed) {
     const row = document.createElement("div")
     row.className = "seed-result"
-    row.textContent = `${emoji} ${text}`
+
+    if (imageUrl) {
+      const img = document.createElement("img")
+      img.src = imageUrl
+      img.alt = ""
+      row.appendChild(img)
+    }
+
+    const span = document.createElement("span")
+    span.textContent = text
+    row.appendChild(span)
+
     row.addEventListener("click", () => this.addSeed(seed))
     return row
   }
