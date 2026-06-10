@@ -2,14 +2,15 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["input", "results", "chips", "inputs"]
-  static values  = { url: String, initialArtists: Array, initialTracks: Array }
+  static values  = { url: String, initialArtists: Array, initialArtistImages: Array, initialTracks: Array }
 
   connect() {
     this.seeds = []
     this.timer = null
 
-    this.initialArtistsValue.forEach(name => {
-      this.seeds.push({ kind: "artist", value: name, label: name })
+    this.initialArtistsValue.forEach((name, i) => {
+      const image = this.initialArtistImagesValue[i] || null
+      this.seeds.push({ kind: "artist", value: name, label: name, image: image || undefined })
     })
 
     this.initialTracksValue.forEach(entry => {

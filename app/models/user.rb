@@ -69,6 +69,13 @@ class User < ApplicationRecord
     (display_name.presence || "?").split.map(&:first).first(2).join.upcase
   end
 
+  # Normalise top_artists qui peut être ["string"] (ancien) ou [{"name","image"}] (nouveau).
+  def artist_cards
+    top_artists.map do |a|
+      a.is_a?(Hash) ? a : { "name" => a, "image" => nil }
+    end
+  end
+
   private
 
   def assign_friend_code

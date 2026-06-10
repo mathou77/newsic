@@ -25,6 +25,7 @@
              data-controller="seed-search"
              data-seed-search-url-value="<%= seed_search_suggestions_path %>"
              data-seed-search-initial-artists-value="<%= (@filters[:seed_artists] || []).to_json %>"
+             data-seed-search-initial-artist-images-value="<%= (@filters[:seed_artist_images] || []).to_json %>"
              data-seed-search-initial-tracks-value="<%= (@filters[:seed_tracks] || []).to_json %>">
           <span class="seed-search__label">Artistes / Titres</span>
           <input type="text" data-seed-search-target="input" class="seed-input"
@@ -132,15 +133,6 @@
   </div>
 
   <% if @playlists.any? %>
-    <div id="tap-overlay" class="tap-overlay"
-         data-swipe-target="overlay"
-         data-action="click->swipe#overlayClick">
-      <div class="tap-overlay__content">
-        <div class="tap-overlay__icon">🎵</div>
-        <p>Appuie pour démarrer</p>
-      </div>
-    </div>
-
     <div class="cards-stack" id="cards-stack">
       <% @playlists.each_with_index do |playlist, index| %>
         <div class="swipe-card <%= 'active' if index == 0 %>"
@@ -165,7 +157,9 @@
               <div class="card-info">
                 <div class="card-info__text">
                   <h2><%= playlist.song.title %></h2>
-                  <p><%= playlist.song.artist %></p>
+                  <%= link_to playlist.song.artist,
+                               artist_path(name: playlist.song.artist),
+                               class: "card-artist-link" %>
                 </div>
                 <button type="button" class="card-share" data-action="share-sheet#open"
                         data-song-id="<%= playlist.song.id %>" aria-label="Partager">
@@ -289,3 +283,12 @@
 
   <div class="toast" data-share-sheet-target="toast" hidden>Partagé !</div>
 </div>
+
+<% if @playlists.any? %>
+  <div id="tap-overlay" class="tap-overlay">
+    <div class="tap-overlay__content">
+      <div class="tap-overlay__icon">🎵</div>
+      <p>Appuie pour démarrer</p>
+    </div>
+  </div>
+<% end %>

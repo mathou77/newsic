@@ -98,8 +98,9 @@ class SuggestionsController < ApplicationController
       diverse:       params[:diverse].present?,
       discovery:     params[:discovery].present?,
       exclude_liked: true,
-      seed_artists: clean_seeds(params[:seed_artists]),
-      seed_tracks:  clean_seeds(params[:seed_tracks])
+      seed_artists:       clean_seeds(params[:seed_artists]),
+      seed_artist_images: Array(params[:seed_artist_images]).map(&:to_s).first(MAX_SEEDS),
+      seed_tracks:        clean_seeds(params[:seed_tracks])
     }
   end
 
