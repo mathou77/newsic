@@ -1,7 +1,12 @@
 import { Controller } from "@hotwired/stimulus"
 
+// Set to true when Turbo initiates a navigation (user clicked a link).
+// On initial page load, turbo:visit does NOT fire, so this stays false.
+let turboNavigated = false
+document.addEventListener("turbo:visit", () => { turboNavigated = true })
+
 export default class extends Controller {
-  static targets = ["card", "overlay"]
+  static targets = ["card"]
   static values  = { recapUrl: String }
 
   connect() {
@@ -16,6 +21,7 @@ export default class extends Controller {
     this._seekTouchStart = (e) => { if (e.target.closest(".player-bar__progress")) { this.isSeeking = true;  this.seekFromClientX(e.touches[0].clientX) } }
     this._seekTouchMove  = (e) => { if (this.isSeeking) this.seekFromClientX(e.touches[0].clientX) }
     this._seekTouchEnd   = ()  => { this.isSeeking = false }
+    this._overlayClick   = ()  => { this.unlockAudio() }
 
     document.addEventListener("mousedown",  this._seekMouseDown)
     document.addEventListener("mousemove",  this._seekMouseMove)
@@ -24,8 +30,16 @@ export default class extends Controller {
     document.addEventListener("touchmove",  this._seekTouchMove,  { passive: true })
     document.addEventListener("touchend",   this._seekTouchEnd)
 
+    const overlay = document.getElementById("tap-overlay")
+    if (overlay) overlay.addEventListener("click", this._overlayClick)
+
     this.cardTargets.forEach(card => this.applyCardColor(card))
-    this.tryAutoplay()
+
+    if (turboNavigated) {
+      turboNavigated = false
+      this.tryAutoplay()
+    }
+    // else: initial page load — overlay stays visible, user must click
   }
 
   disconnect() {
@@ -35,17 +49,20 @@ export default class extends Controller {
     document.removeEventListener("touchstart", this._seekTouchStart)
     document.removeEventListener("touchmove",  this._seekTouchMove)
     document.removeEventListener("touchend",   this._seekTouchEnd)
+
+    const overlay = document.getElementById("tap-overlay")
+    if (overlay) overlay.removeEventListener("click", this._overlayClick)
+
     this.stopAllAudio()
   }
 
   // ── Overlay ───────────────────────────────────────────────────────────────────
 
-  overlayClick() { this.unlockAudio() }
-
   unlockAudio() {
     if (this.audioUnlocked) return
     this.audioUnlocked = true
-    if (this.hasOverlayTarget) this.overlayTarget.style.display = "none"
+    const overlay = document.getElementById("tap-overlay")
+    if (overlay) overlay.style.display = "none"
     this.playCurrentAudio()
   }
 
@@ -56,7 +73,8 @@ export default class extends Controller {
     if (!audio) return
     audio.play().then(() => {
       this.audioUnlocked = true
-      if (this.hasOverlayTarget) this.overlayTarget.style.display = "none"
+      const overlay = document.getElementById("tap-overlay")
+      if (overlay) overlay.style.display = "none"
       this.bindProgressBar(audio, card.querySelector(".player-bar__fill"))
       this.updatePlayerIcon()
     }).catch(() => {})
@@ -71,8 +89,9 @@ export default class extends Controller {
   // ── Flip ──────────────────────────────────────────────────────────────────────
 
   flip(event) {
-    if (event.target.closest(".card-player-bar")) return
-    if (event.target.closest(".card-share"))      return
+    if (event.target.closest(".card-player-bar"))  return
+    if (event.target.closest(".card-share"))        return
+    if (event.target.closest(".card-artist-link"))  return
     event.currentTarget.classList.toggle("is-flipped")
   }
 

@@ -1,4 +1,4 @@
-<div class="profile-page">
+<div class="profile-page" data-controller="profile">
   <header class="profile-header">
     <div class="profile-avatar"><%= avatar_for(@user, size: 96) %></div>
     <h1 class="profile-name"><%= @user.display_name %></h1>
@@ -14,10 +14,24 @@
         <span class="profile-stat__num"><%= @playlist_count %></span>
         <span class="profile-stat__label">Sessions</span>
       </div>
-      <div class="profile-stat">
+      <button type="button" class="profile-stat profile-stat--btn"
+              data-action="click->profile#toggleFriends">
         <span class="profile-stat__num"><%= @friend_count %></span>
         <span class="profile-stat__label">Amis</span>
-      </div>
+      </button>
+    </div>
+
+    <div class="friends-drawer" data-profile-target="friends">
+      <% if @friends.any? %>
+        <% @friends.each do |friend| %>
+          <%= link_to user_path(friend), class: "friends-drawer__item" do %>
+            <%= avatar_for(friend, size: 36) %>
+            <span class="friends-drawer__name"><%= friend.display_name %></span>
+          <% end %>
+        <% end %>
+      <% else %>
+        <p class="friends-drawer__empty">Pas encore d'amis.</p>
+      <% end %>
     </div>
   </header>
 
@@ -32,14 +46,21 @@
     </section>
   <% end %>
 
-  <% if @user.top_artists.present? %>
+  <% if @user.artist_cards.any? %>
     <section class="profile-section">
       <h2 class="profile-section__title">Artistes les plus écoutés</h2>
-      <ol class="artist-list">
-        <% @user.top_artists.each do |artist| %>
-          <li><%= artist %></li>
+      <div class="artist-cards">
+        <% @user.artist_cards.each do |artist| %>
+          <%= link_to artist_path(name: artist["name"]), class: "artist-card" do %>
+            <% if artist["image"].present? %>
+              <%= image_tag artist["image"], alt: "", class: "artist-card__img" %>
+            <% else %>
+              <div class="artist-card__fallback">🎤</div>
+            <% end %>
+            <span class="artist-card__name"><%= artist["name"] %></span>
+          <% end %>
         <% end %>
-      </ol>
+      </div>
     </section>
   <% end %>
 

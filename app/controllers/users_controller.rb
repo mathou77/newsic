@@ -16,6 +16,9 @@ class UsersController < ApplicationController
     @user = User.find(params[:id])
     redirect_to(profile_path) and return if @user == current_user
 
-    @friendship = current_user.friendship_with(@user)
+    @friendship     = current_user.friendship_with(@user)
+    @playlist_count = @user.suggestions.count
+    @friend_count   = @user.friends.count
+    @friends        = @user.friends.order(:display_name)
   end
 end

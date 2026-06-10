@@ -36,4 +36,25 @@ class DeezerService
   def track(deezer_id)
     HTTParty.get("#{BASE_URL}/track/#{deezer_id}")
   end
+
+  def artist_info(artist_name)
+    response = HTTParty.get("#{BASE_URL}/search/artist", query: { q: artist_name, limit: 5 })
+    a = (response["data"] || []).find { |r| r["name"].downcase == artist_name.downcase } ||
+        (response["data"] || []).first
+    return nil unless a
+    { "name" => a["name"], "image" => a["picture_big"] || a["picture_xl"] || a["picture_medium"] }
+  end
+
+  def artist_top_tracks(artist_name, limit: 12)
+    response = HTTParty.get("#{BASE_URL}/search", query: { q: "artist:\"#{artist_name}\"", limit: limit })
+    (response["data"] || []).first(limit).map do |t|
+      {
+        "title"       => t["title"],
+        "artist"      => t.dig("artist", "name"),
+        "preview_url" => t["preview"],
+        "image"       => t.dig("album", "cover_medium"),
+        "deezer_id"   => t["id"]
+      }
+    end
+  end
 end

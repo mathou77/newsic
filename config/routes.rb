@@ -41,6 +41,7 @@ Rails.application.routes.draw do
   end
   resources :songs, only: [:show]
   resources :shares, only: [:create]
+  get "artists", to: "artists#show", as: :artist
 
 
   get "manifest"       => "pwa#manifest",        as: :pwa_manifest
