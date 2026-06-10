@@ -16,7 +16,7 @@
 
   <% if @song.preview_url.present? %>
     <div class="song-detail__player" data-controller="preview">
-      <audio data-preview-target="audio" src="<%= @song.preview_url %>" preload="none"></audio>
+      <audio data-preview-target="audio" src="<%= preview_song_path(@song) %>" preload="none"></audio>
       <button type="button" class="song-detail__play" data-action="preview#toggle" data-preview-target="button">
         <i class="fa-solid fa-play"></i> Écouter l'extrait
       </button>

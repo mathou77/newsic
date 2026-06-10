@@ -39,7 +39,9 @@ Rails.application.routes.draw do
       post  :reply
     end
   end
-  resources :songs, only: [:show]
+  resources :songs, only: [:show] do
+    get :preview, on: :member
+  end
   resources :shares, only: [:create]
   get "artists", to: "artists#show", as: :artist
 

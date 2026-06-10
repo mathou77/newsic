@@ -19,7 +19,7 @@
       <% end %>
       <% if song.preview_url.present? %>
         <span class="track-card__play" data-controller="preview">
-          <audio data-preview-target="audio" src="<%= song.preview_url %>" preload="none"></audio>
+          <audio data-preview-target="audio" src="<%= preview_song_path(song) %>" preload="none"></audio>
           <button type="button" class="track-play" data-action="preview#toggle" data-preview-target="button"><i class="fa-solid fa-play"></i></button>
         </span>
       <% end %>

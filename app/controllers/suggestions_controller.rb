@@ -32,8 +32,8 @@ class SuggestionsController < ApplicationController
     count       = (@filters[:count].presence || 10).to_i
     @playlists  = @suggestion.playlists.pending.includes(:song).limit(count)
     @friends    = current_user.friends
-
-    refresh_stale_previews(@playlists.map(&:song))
+    # Previews are served fresh through SongsController#preview (Deezer URLs
+    # expire within minutes), so there is nothing to pre-refresh here.
   end
 
   def recap
@@ -104,22 +104,6 @@ class SuggestionsController < ApplicationController
       seed_artist_images: Array(params[:seed_artist_images]).map(&:to_s).first(MAX_SEEDS),
       seed_tracks:        clean_seeds(params[:seed_tracks])
     }
-  end
-
-  # Deezer preview URLs are signed and expire after a few hours.
-  # Re-fetch fresh ones for any song not updated in the last 3 hours,
-  # then persist so the next load is instant.
-  def refresh_stale_previews(songs)
-    stale = songs.select { |s| s.deezer_id.present? && s.updated_at < 3.hours.ago }
-    return if stale.empty?
-
-    deezer = DeezerService.new
-    stale.each do |song|
-      fresh = deezer.fresh_preview_url(song.deezer_id)
-      song.update_columns(preview_url: fresh, updated_at: Time.current) if fresh.present?
-    end
-  rescue => e
-    Rails.logger.warn("refresh_stale_previews: #{e.message}")
   end
 
   # Accepts an array of strings, drops blanks/dupes, caps the count.

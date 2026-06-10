@@ -48,7 +48,7 @@
             </div>
             <% if song.preview_url.present? %>
               <button type="button" class="track-row__play"
-                      data-preview="<%= song.preview_url %>"
+                      data-preview="<%= preview_song_path(song) %>"
                       aria-label="Écouter">
                 <i class="fa-solid fa-play"></i>
               </button>
