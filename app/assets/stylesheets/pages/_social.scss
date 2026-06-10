@@ -400,6 +400,8 @@ $panel-border: rgba($white, 0.10);
   display: flex;
   align-items: center;
   gap: 12px;
+  text-decoration: none;
+  color: $white;
 }
 
 .conversation-row {
@@ -410,14 +412,22 @@ $panel-border: rgba($white, 0.10);
   border-radius: 16px;
   background: $panel;
   border: 1px solid $panel-border;
-  text-decoration: none;
   color: $white;
+}
+
+.conversation-row__avatar-link {
+  flex-shrink: 0;
+  display: block;
+  text-decoration: none;
 }
 
 .conversation-row__info {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex: 1;
+  text-decoration: none;
+  color: $white;
 }
 .conversation-row__name { font-weight: 700; }
 .conversation-row__preview {
