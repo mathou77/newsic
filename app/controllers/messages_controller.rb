@@ -11,15 +11,20 @@ class MessagesController < ApplicationController
     attach_song(@message)
 
     if @message.save
-      # The bubble append + broadcast to the other party both happen via the
-      # model's after_create_commit Turbo broadcast. Just reset the form here.
       respond_to do |format|
         format.turbo_stream do
-          render turbo_stream: turbo_stream.replace(
-            "message_form",
-            partial: "messages/form",
-            locals: { conversation: conversation, message: Message.new }
-          )
+          render turbo_stream: [
+            turbo_stream.append(
+              "messages",
+              partial: "messages/message",
+              locals: { message: @message }
+            ),
+            turbo_stream.replace(
+              "message_form",
+              partial: "messages/form",
+              locals: { conversation: conversation, message: Message.new }
+            )
+          ]
         end
         format.html { redirect_to conversation_path(conversation) }
       end
