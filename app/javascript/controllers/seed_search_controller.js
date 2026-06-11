@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["input", "results", "chips", "inputs"]
-  static values  = { url: String, initialArtists: Array, initialArtistImages: Array, initialTracks: Array }
+  static values  = { url: String, initialArtists: Array, initialArtistImages: Array, initialTracks: Array, initialTrackImages: Array }
 
   connect() {
     this.seeds = []
@@ -13,9 +13,10 @@ export default class extends Controller {
       this.seeds.push({ kind: "artist", value: name, label: name, image: image || undefined })
     })
 
-    this.initialTracksValue.forEach(entry => {
+    this.initialTracksValue.forEach((entry, i) => {
       const [artist, title] = entry.split("|")
-      this.seeds.push({ kind: "track", value: entry, label: `${title} — ${artist}` })
+      const image = this.initialTrackImagesValue[i] || null
+      this.seeds.push({ kind: "track", value: entry, label: `${title} — ${artist}`, image: image || undefined })
     })
 
     this.render()
@@ -98,6 +99,14 @@ export default class extends Controller {
       hidden.name  = s.kind === "artist" ? "seed_artists[]" : "seed_tracks[]"
       hidden.value = s.value
       this.inputsTarget.appendChild(hidden)
+
+      // Carry the cover/photo through the round-trip so chips keep their image
+      // when the filters panel is reopened after applying.
+      const imgHidden = document.createElement("input")
+      imgHidden.type  = "hidden"
+      imgHidden.name  = s.kind === "artist" ? "seed_artist_images[]" : "seed_track_images[]"
+      imgHidden.value = s.image || ""
+      this.inputsTarget.appendChild(imgHidden)
     })
   }
 

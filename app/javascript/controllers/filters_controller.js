@@ -56,6 +56,12 @@ export default class extends Controller {
     form.querySelectorAll("select").forEach(s => { s.selectedIndex = 0 })
     this.element.querySelectorAll(".mood-pill").forEach(p => p.classList.remove("is-active"))
 
+    // Send the decade/tempo sliders back to their "off" position.
+    this.element.querySelectorAll(".range-slider").forEach((r) => {
+      r.value = 0
+      this.syncRange(r)
+    })
+
     // Clear the artist/track seeds, which live in their own controller.
     const seedEl = this.element.querySelector("[data-controller~='seed-search']")
     if (seedEl) {
@@ -67,13 +73,12 @@ export default class extends Controller {
     this.updateBadge()
   }
 
+  // Mode découverte: wipe every filter and just reload a fresh set of
+  // suggestions with no constraints.
   surprise() {
     const form = this.element.querySelector(".filters-form")
     if (!form) return
-    const diverse   = form.querySelector("input[name='diverse']")
-    const discovery = form.querySelector("input[name='discovery']")
-    if (diverse)   diverse.checked   = true
-    if (discovery) discovery.checked = true
+    this.reset()
     form.submit()
   }
 
@@ -100,8 +105,8 @@ export default class extends Controller {
 
     if (form.querySelector("input[name='genre']:checked")?.value) count++
     if (form.querySelector("input[name='mood']:checked")?.value) count++
-    if (form.querySelector("input[name='decade']:checked")?.value) count++
-    if (form.querySelector("input[name='tempo']:checked")?.value) count++
+    if (form.querySelector("input[name='decade']")?.value) count++
+    if (form.querySelector("input[name='tempo']")?.value) count++
 
     const tr = form.querySelector("input[name='time_range']:checked")
     if (tr && tr.value !== "long_term") count++
