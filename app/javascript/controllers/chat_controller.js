@@ -1,22 +1,18 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Aligns message bubbles (mine vs theirs) using the sender id carried on each
-// bubble, and keeps the thread scrolled to the latest message — including
-// messages that arrive in real time via Turbo Stream broadcasts.
+// Aligns message bubbles (mine vs theirs), groups consecutive messages from the
+// same sender, inserts date separators, and keeps the thread pinned to the
+// bottom — including messages that arrive in real time via Turbo Stream.
 export default class extends Controller {
   static targets = ["messages"]
-  static values = { currentUserId: Number }
+  static values = { currentUserId: Number, conversationId: Number }
 
   connect() {
-    this.alignAll()
-    this.groupMessages()
-    this.addDateSeparators()
+    this.render()
     this.scrollToBottom()
 
     this.observer = new MutationObserver(() => {
-      this.alignAll()
-      this.groupMessages()
-      this.addDateSeparators()
+      this.render()
       this.scrollToBottom()
     })
     this.observer.observe(this.messagesTarget, { childList: true })
@@ -24,6 +20,40 @@ export default class extends Controller {
 
   disconnect() {
     this.observer?.disconnect()
+  }
+
+  // Re-apply all visual decorations. We pause the observer while we write to the
+  // DOM ourselves (separators are real nodes) so our own edits don't retrigger
+  // the observer in an infinite loop.
+  render() {
+    this.observer?.disconnect()
+    this.pruneForeign()
+    this.alignAll()
+    this.groupMessages()
+    this.addDateSeparators()
+    this.observer?.observe(this.messagesTarget, { childList: true })
+  }
+
+  // The recipient subscribes to a per-user stream, so a message landing in
+  // another open conversation could leak in here — drop anything that isn't
+  // ours.
+  pruneForeign() {
+    if (!this.hasConversationIdValue) return
+    this.messagesTarget.querySelectorAll(".msg").forEach((msg) => {
+      const cid = msg.dataset.conversationId
+      if (cid && Number(cid) !== this.conversationIdValue) msg.remove()
+    })
+  }
+
+  // Clear the input the instant the send round-trips, keeping focus so the user
+  // can keep firing off messages without losing a beat.
+  resetForm(event) {
+    if (event.detail?.success === false) return
+    const input = this.element.querySelector(".chat-form__input")
+    if (input) {
+      input.value = ""
+      input.focus()
+    }
   }
 
   alignAll() {
@@ -47,13 +77,12 @@ export default class extends Controller {
   }
 
   addDateSeparators() {
-    this.messagesTarget.querySelectorAll(".msg-date-sep").forEach(el => el.remove())
+    this.messagesTarget.querySelectorAll(".msg-date-sep").forEach((el) => el.remove())
 
     const msgs = Array.from(this.messagesTarget.querySelectorAll(".msg"))
     msgs.forEach((msg, i) => {
       const ts = Number(msg.dataset.timestamp)
-      const prev = msgs[i - 1]
-      const prevTs = prev ? Number(prev.dataset.timestamp) : null
+      const prevTs = i > 0 ? Number(msgs[i - 1].dataset.timestamp) : null
 
       if (i === 0 || ts - prevTs > 3600) {
         const sep = document.createElement("div")
@@ -73,11 +102,11 @@ export default class extends Controller {
     if (date >= sevenDaysAgo) {
       const days = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"]
       return `${days[date.getDay()]} ${hh}:${mm}`
-    } else {
-      const months = ["janvier", "février", "mars", "avril", "mai", "juin",
-                      "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
-      return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`
     }
+
+    const months = ["janvier", "février", "mars", "avril", "mai", "juin",
+                    "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
+    return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`
   }
 
   scrollToBottom() {
