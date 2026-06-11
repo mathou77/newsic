@@ -153,6 +153,11 @@
 
           <div class="flip-card-inner" data-action="click->swipe#flip">
             <div class="flip-card-front">
+              <button type="button" class="card-share" data-action="share-sheet#open"
+                      data-song-id="<%= playlist.song.id %>" aria-label="Partager">
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+
               <img src="<%= playlist.song.image_url %>" alt="<%= playlist.song.title %>" class="card-cover" crossorigin="anonymous">
 
               <div class="card-player-bar">
@@ -172,10 +177,6 @@
                                artist_path(name: playlist.song.artist),
                                class: "card-artist-link" %>
                 </div>
-                <button type="button" class="card-share" data-action="share-sheet#open"
-                        data-song-id="<%= playlist.song.id %>" aria-label="Partager">
-                  <i class="fa-solid fa-share-nodes"></i>
-                </button>
               </div>
             </div>
 
