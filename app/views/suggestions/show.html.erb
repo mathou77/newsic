@@ -5,12 +5,14 @@
 <% end %>
 
 <div class="swipe-container"
-     data-controller="share-sheet swipe"
+     data-controller="share-sheet swipe playlist-sheet"
      data-swipe-recap-url-value="<%= recap_suggestion_path(@suggestion) %>"
      data-share-sheet-url-value="<%= shares_path %>"
      data-action="touchstart->swipe#touchStart touchend->swipe#touchEnd">
 
-  <div data-controller="filters">
+  <div class="swipe-topbar">
+    <div class="swipe-topbar__right">
+      <div data-controller="filters" class="filters-control">
     <button type="button" class="filters-toggle" id="filters-toggle"
             data-filters-target="toggle"
             data-action="filters#open">
@@ -88,19 +90,9 @@
             </button>
             <div class="filters-finetune__body">
 
-              <%# Mood %>
-              <div class="filter-block">
-                <span class="filter-label">Mood</span>
-                <div class="mood-pills">
-                  <% [["", "✨", "Tous"], ["chill", "🌙", "Chill"], ["energy", "⚡", "Énergie"],
-                      ["focus", "🎯", "Focus"], ["happy", "☀️", "Happy"], ["late night", "🌃", "Late night"]].each do |value, icon, lbl| %>
-                    <label class="mood-pill <%= 'is-active' if @filters[:mood].to_s == value %>">
-                      <%= radio_button_tag :mood, value, @filters[:mood].to_s == value %>
-                      <span><%= icon %> <%= lbl %></span>
-                    </label>
-                  <% end %>
-                </div>
-              </div>
+              <%# Mood lives in the top bar now; keep it on the form so applying
+                  the advanced filters preserves the currently selected mood. %>
+              <%= hidden_field_tag :mood, @filters[:mood], id: "filters-mood-input" %>
 
               <%# Décennie — slider %>
               <% decades = [["","Toutes"],["1970","70s"],["1980","80s"],["1990","90s"],["2000","2000s"],["2010","2010s"],["2020","2020s"]] %>
@@ -188,7 +180,40 @@
           <%= submit_tag "Appliquer", class: "btn-apply-filters" %>
         </div>
       <% end %>
-    </div>
+      </div><%# .filters-panel %>
+      </div><%# .filters-control %>
+    </div><%# .swipe-topbar__right %>
+  </div><%# .swipe-topbar %>
+
+  <%# Mood — quick switcher above the cards. Each pill submits, carrying the
+      other active filters so switching mood doesn't drop them. %>
+  <div class="mood-bar">
+    <%= form_with url: suggestions_path, method: :post, data: { turbo: false }, class: "mood-bar__form" do %>
+      <%= hidden_field_tag :genre, @filters[:genre] %>
+      <%= hidden_field_tag :time_range, @filters[:time_range] %>
+      <%= hidden_field_tag :count, @filters[:count] %>
+      <%= hidden_field_tag :decade, @filters[:decade] %>
+      <%= hidden_field_tag :tempo, @filters[:tempo] %>
+      <% if @filters[:diverse] %><%= hidden_field_tag :diverse, "1" %><% end %>
+      <% if @filters[:discovery] %><%= hidden_field_tag :discovery, "1" %><% end %>
+      <% if @filters[:exclude_disliked] %><%= hidden_field_tag :exclude_disliked, "1" %><% end %>
+      <% (@filters[:seed_artists] || []).each_with_index do |a, i| %>
+        <%= hidden_field_tag "seed_artists[]", a %>
+        <%= hidden_field_tag "seed_artist_images[]", (@filters[:seed_artist_images] || [])[i] %>
+      <% end %>
+      <% (@filters[:seed_tracks] || []).each_with_index do |t, i| %>
+        <%= hidden_field_tag "seed_tracks[]", t %>
+        <%= hidden_field_tag "seed_track_images[]", (@filters[:seed_track_images] || [])[i] %>
+      <% end %>
+
+      <% [["", "Tous"], ["chill", "🌙", "Chill"], ["energy", "⚡", "Énergie"],
+          ["focus", "🎯", "Focus"], ["happy", "☀️", "Happy"], ["late night", "🌃", "Late night"]].each do |value, icon, lbl| %>
+        <button type="submit" name="mood" value="<%= value %>"
+                class="mood-chip <%= 'is-active' if @filters[:mood].to_s == value %>">
+          <span class="mood-chip__icon"><%= icon %></span><%= lbl %>
+        </button>
+      <% end %>
+    <% end %>
   </div>
 
   <% if @playlists.any? %>
@@ -197,6 +222,7 @@
         <div class="swipe-card <%= 'active' if index == 0 %>"
              data-swipe-target="card"
              data-playlist-id="<%= playlist.id %>"
+             data-color="<%= playlist.song.dominant_color %>"
              data-vote-url="<%= vote_suggestion_playlist_path(@suggestion, playlist) %>">
 
           <div class="flip-card-inner" data-action="click->swipe#flip">
@@ -292,8 +318,16 @@
     </div>
 
     <div class="swipe-buttons" id="swipe-buttons">
+      <button type="button" class="swipe-mini swipe-mini--back" data-action="swipe#back"
+              data-swipe-target="back" aria-label="Son précédent" hidden>
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
       <button class="btn-dislike" data-action="click->swipe#dislike">✕</button>
       <button class="btn-like" data-action="click->swipe#like">♥</button>
+      <button type="button" class="swipe-mini swipe-mini--playlist" data-action="playlist-sheet#open"
+              aria-label="Ma playlist Newsic">
+        <i class="fa-solid fa-music"></i>
+      </button>
     </div>
   <% else %>
     <div class="done-screen">
@@ -342,4 +376,41 @@
   </div>
 
   <div class="toast" data-share-sheet-target="toast" hidden>Partagé !</div>
+
+  <%# Ma playlist Newsic — bottom sheet listing every liked song with a quick
+      preview. %>
+  <div class="playlist-sheet" data-playlist-sheet-target="sheet" hidden>
+    <div class="playlist-sheet__backdrop" data-action="playlist-sheet#close"></div>
+    <div class="playlist-sheet__panel">
+      <div class="playlist-sheet__head">
+        <div class="playlist-sheet__grabber"></div>
+        <div class="playlist-sheet__titlerow">
+          <h3 class="playlist-sheet__title">Newsic</h3>
+          <button type="button" class="playlist-sheet__close" data-action="playlist-sheet#close" aria-label="Fermer">✕</button>
+        </div>
+        <p class="playlist-sheet__count"><%= @playlist_songs.size %> son<%= "s" if @playlist_songs.size > 1 %></p>
+      </div>
+
+      <div class="playlist-sheet__list">
+        <% if @playlist_songs.empty? %>
+          <p class="empty-state">Aucun son ajouté pour l'instant. Like des titres pour les retrouver ici.</p>
+        <% else %>
+          <% @playlist_songs.each do |song| %>
+            <button type="button" class="pl-song" data-playlist-sheet-target="song"
+                    data-preview-url="<%= preview_song_path(song) %>"
+                    data-action="playlist-sheet#toggle">
+              <span class="pl-song__cover">
+                <img src="<%= song.image_url %>" alt="" loading="lazy">
+                <span class="pl-song__icon"><i class="fa-solid fa-play"></i></span>
+              </span>
+              <span class="pl-song__meta">
+                <span class="pl-song__title"><%= song.title %></span>
+                <span class="pl-song__artist"><%= song.artist %></span>
+              </span>
+            </button>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
 </div>

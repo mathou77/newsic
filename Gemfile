@@ -43,6 +43,9 @@ gem "thruster", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 2.0"
+# ImageMagick backend — also used to extract ambient cover colours (see
+# ExtractDominantColorJob). Requires the ImageMagick binary at runtime.
+gem "mini_magick", "~> 5.0"
 
 gem "sprockets-rails"
 gem "bootstrap", "~> 5.3"

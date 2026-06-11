@@ -1,31 +1,105 @@
+// Ambient cover colour — a registered custom property so it can be transitioned.
+// JS sets it from the active card's data-color; CSS crossfades over 0.6s.
+@property --ambient-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #0a0a1a;
+}
+
 .swipe-container {
   position: relative;
   min-height: 100vh;
-  padding: 28px 24px 70px;
+  padding: 12px 16px 70px;
 
   display: flex;
   flex-direction: column;
   align-items: center;
 
+  --ambient-color: #0a0a1a;
+  background-color: #0a0a1a; // fallback if color-mix/gradient is unsupported
   background:
-    radial-gradient(circle at 50% 18%, rgba(76, 90, 255, 0.35), transparent 34%),
-    radial-gradient(circle at 80% 45%, rgba(143, 76, 255, 0.22), transparent 32%),
-    #050510;
+    radial-gradient(circle at 50% 30%,
+      color-mix(in srgb, var(--ambient-color) 60%, transparent) 0%,
+      color-mix(in srgb, var(--ambient-color) 18%, transparent) 42%,
+      transparent 68%),
+    #0a0a1a;
+  transition: --ambient-color 0.6s ease;
   color: white;
   overflow: hidden;
 }
 
+// Top row above the moods: just the filters button, pinned right.
+.swipe-topbar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.swipe-topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filters-control {
+  width: auto;
+}
+
+// Mood switcher, full width, just under the top bar.
+.mood-bar {
+  width: 100%;
+  margin: 0 0 14px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+}
+
+.mood-bar__form {
+  display: flex;
+  gap: 6px;
+  width: max-content; // let the row overflow horizontally instead of wrapping
+}
+
+.mood-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba($white, 0.12);
+  background: rgba($white, 0.04);
+  color: rgba($white, 0.68);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.18s ease;
+
+  &__icon { font-size: 0.85rem; line-height: 1; }
+
+  // Selected = just the violet outline, no full gradient fill.
+  &.is-active {
+    border-color: $violet-500;
+    color: $white;
+    background: rgba($violet-500, 0.12);
+    box-shadow: 0 0 0 1px rgba($violet-500, 0.6);
+  }
+}
+
 .filters-toggle {
   display: inline-flex;
-  align-self: flex-end;
-  margin-bottom: 16px;
   position: relative;
   z-index: 10;
 
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
+  gap: 6px;
+  padding: 7px 13px;
   border-radius: 999px;
   border: 1px solid rgba($white, 0.15);
   background: rgba(18, 16, 28, 0.8);
@@ -34,13 +108,13 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba($white, 0.08);
 
   color: rgba($white, 0.85);
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   cursor: pointer;
   transition: all 0.2s ease;
 
-  svg { opacity: 0.8; }
+  svg { opacity: 0.8; width: 16px; height: 16px; }
 
   &::after {
     content: "Filtres";
@@ -720,10 +794,12 @@
 // ── Swipe buttons ─────────────────────────────────────────────────────────────
 
 .swipe-buttons {
+  position: relative;
+  width: 100%;
   display: flex;
-  justify-content: center;
+  align-items: center;
+  justify-content: center; // only dislike + like are in flow, so they stay put
   gap: 58px;
-  padding: 0 24px;
   margin-top: 20px;
 }
 
@@ -740,6 +816,36 @@
     transform: scale(0.92);
   }
 }
+
+// Smaller secondary buttons (back / playlist), pinned to the edges so they
+// never push the dislike/like pair off-center.
+.swipe-buttons .swipe-mini {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  margin: auto 0; // vertical centering without a transform (keeps :active scale)
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  font-size: 0.95rem;
+  background: rgba(18, 16, 28, 0.85);
+  border: 1.5px solid rgba($white, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: rgba($white, 0.75);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+
+  &:hover {
+    border-color: rgba($violet-500, 0.5);
+    color: $white;
+  }
+  &[hidden] { display: none; }
+}
+
+.swipe-buttons .swipe-mini--back     { left: 6px; }
+.swipe-buttons .swipe-mini--playlist { right: 6px; }
 
 .btn-dislike {
   background: rgba(18, 16, 28, 0.85);
@@ -896,7 +1002,11 @@
   position: absolute;
   inset: 0;
   transform: rotateY(180deg);
-  background: linear-gradient(180deg, #151326 0%, #0d0d18 100%);
+  // Tint the back face ("l'autre côté") with the same ambient cover colour.
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--ambient-color) 55%, #151326) 0%,
+    #0d0d18 100%);
+  transition: --ambient-color 0.6s ease;
   color: white;
   padding: 18px 20px 110px;
   border-radius: 28px;
@@ -1101,4 +1211,150 @@
   border-radius: 12px;
   color: rgba(29, 185, 84, 0.85);
   letter-spacing: 0.02em;
+}
+
+// ── Playlist sheet (Newsic) ───────────────────────────────────────────────────
+.playlist-sheet { position: fixed; inset: 0; z-index: 80; }
+
+.playlist-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.playlist-sheet__panel {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 100%;
+  max-width: 430px; // match the mobile-app frame
+  max-height: 78vh;
+  display: flex;
+  flex-direction: column;
+  background: #12101c;
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid rgba($violet-500, 0.4);
+  transform: translateX(-50%) translateY(100%);
+  transition: transform 0.25s ease;
+}
+.playlist-sheet.is-open .playlist-sheet__panel { transform: translateX(-50%) translateY(0); }
+
+.playlist-sheet__head {
+  flex-shrink: 0;
+  padding: 12px 20px 10px;
+  border-bottom: 1px solid rgba($white, 0.06);
+}
+
+.playlist-sheet__grabber {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba($white, 0.25);
+  margin: 0 auto 12px;
+}
+
+.playlist-sheet__titlerow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.playlist-sheet__title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, $violet-500, $magenta-500);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.playlist-sheet__close {
+  background: none;
+  border: none;
+  color: rgba($white, 0.6);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.playlist-sheet__count {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: rgba($white, 0.45);
+}
+
+.playlist-sheet__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 8px 12px calc(16px + env(safe-area-inset-bottom));
+}
+
+.pl-song {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border: none;
+  background: none;
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+
+  &:hover { background: rgba($white, 0.05); }
+  &.is-playing { background: rgba($violet-500, 0.14); }
+}
+
+.pl-song__cover {
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  overflow: hidden;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.pl-song__icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  color: $white;
+  font-size: 0.85rem;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+
+  .pl-song:hover &,
+  .pl-song.is-playing & { opacity: 1; }
+}
+
+.pl-song__meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pl-song__title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: $white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pl-song__artist {
+  font-size: 0.8rem;
+  color: rgba($white, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
