@@ -1,3 +1,9 @@
+<% content_for :head do %>
+  <%# Always re-render this page fresh on Turbo navigation: never flash a cached
+      snapshot with already-swiped cards or a stale audio state. %>
+  <meta name="turbo-cache-control" content="no-preview">
+<% end %>
+
 <div class="swipe-container"
      data-controller="share-sheet swipe"
      data-swipe-recap-url-value="<%= recap_suggestion_path(@suggestion) %>"
