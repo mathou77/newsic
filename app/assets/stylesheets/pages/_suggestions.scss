@@ -77,55 +77,243 @@
   box-shadow: 0 2px 8px rgba($violet-500, 0.6);
 }
 
+// ── Filters panel ────────────────────────────────────────────────────────────
+
 .filters-panel {
-  position: absolute;
-  inset: 0;
-  z-index: 40;
-  padding: 80px 24px 120px;
-  background: rgba(0, 0, 0, 0.97);
-  backdrop-filter: blur(18px);
-  transform: translateY(-100%);
-  transition: transform 0.3s ease;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100%;
+  max-width: 430px; // stay inside the phone frame like the rest of the app
+  z-index: 100;
+  background: #08080f;
+  // The whole panel is the scroll container; header & footer stick. This avoids
+  // fragile nested-flex min-height chains that iOS WebKit handles inconsistently.
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  transform: translateX(-50%) translateY(100%);
+  transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1);
+
+  &.open { transform: translateX(-50%) translateY(0); }
 }
 
-.filters-panel.open {
-  transform: translateY(0);
+.filters-header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #08080f;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  padding-top: calc(14px + env(safe-area-inset-top));
+  border-bottom: 1px solid rgba($white, 0.06);
 }
 
-.filters-close {
-  position: absolute;
-  top: 24px;
-  right: 24px;
+.filters-back {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
   border: none;
-  background: transparent;
-  color: white;
-  font-size: 36px;
-  line-height: 1;
+  color: $white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.filters-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $white;
+  margin: 0;
+}
+
+.filters-reset {
+  background: linear-gradient(135deg, $violet-500, $magenta-500);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
 }
 
 .filters-form {
+  // Plain block in normal flow — the panel scrolls, header/footer stick. The
+  // form must NOT clip overflow or the sticky footer breaks.
+  display: block;
+}
+
+.filters-body {
+  // Just a spacing column; the panel above is what scrolls.
+  padding: 20px 20px 24px;
   display: flex;
   flex-direction: column;
+  gap: 28px;
+}
+
+// Surprise me card
+.filters-surprise {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, $violet-500 0%, $magenta-500 100%);
+  box-shadow: 0 8px 32px rgba($violet-500, 0.4);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  border: none;
+  text-align: left;
+  width: 100%;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 25% 50%, rgba($white, 0.18), transparent 55%);
+    pointer-events: none;
+  }
+}
+
+.filters-surprise__left {
+  display: flex;
+  align-items: center;
   gap: 14px;
-  background: #060608;
-  color: $white;
-  border: 1px solid rgba($violet-500, 0.35);
-  border-radius: 28px;
-  padding: 28px 24px;
+  position: relative;
 }
 
-.filters-form label {
+.filters-surprise__icon {
+  font-size: 1.8rem;
+  line-height: 1;
+  color: $white;
+}
+
+.filters-surprise__title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: $white;
+  margin: 0 0 3px;
+}
+
+.filters-surprise__sub {
+  font-size: 0.8rem;
+  color: rgba($white, 0.8);
+  margin: 0;
+}
+
+.filters-surprise__arrow {
+  color: rgba($white, 0.85);
+  font-size: 0.95rem;
+  position: relative;
+}
+
+// Sections
+.filters-section {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: rgba($white, 0.7);
+  gap: 12px;
 }
 
-// ── Mood pills ───────────────────────────────────────────────────────────────
+.filters-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 
+.filters-section__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $white;
+}
+
+.filters-section__sub {
+  font-size: 0.82rem;
+  color: rgba($white, 0.42);
+  margin: -6px 0 0;
+}
+
+// Period pills (time range)
+.period-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.period-pill {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+
+  input[type="radio"] { display: none; }
+
+  span {
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba($white, 0.14);
+    background: rgba($white, 0.05);
+    color: rgba($white, 0.6);
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+  }
+
+  &:has(input:checked) span {
+    background: linear-gradient(135deg, $violet-500, $magenta-500);
+    border-color: transparent;
+    color: $white;
+    box-shadow: 0 2px 12px rgba($violet-500, 0.4);
+  }
+}
+
+// Fine-tune accordion
+.filters-finetune {
+  background: rgba($white, 0.03);
+  border: 1px solid rgba($white, 0.08);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.filters-finetune__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  color: $white;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+.filters-finetune__chevron {
+  color: rgba($white, 0.45);
+  transition: transform 0.25s ease;
+
+  .is-open & { transform: rotate(180deg); }
+}
+
+.filters-finetune__body {
+  display: none;
+  flex-direction: column;
+  gap: 22px;
+  padding: 4px 20px 22px;
+
+  .is-open & { display: flex; }
+}
+
+// Shared pill base
 .filter-block {
   display: flex;
   flex-direction: column;
@@ -133,18 +321,22 @@
 }
 
 .filter-label {
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  color: rgba($white, 0.7);
+  color: rgba($white, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
 }
 
-.mood-pills {
+.mood-pills,
+.era-pills {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.mood-pill {
+.mood-pill,
+.era-pill {
   display: flex;
   align-items: center;
   cursor: pointer;
@@ -154,87 +346,20 @@
   span {
     padding: 7px 14px;
     border-radius: 999px;
-    border: 1px solid rgba($violet-500, 0.35);
-    background: rgba($violet-500, 0.1);
-    color: rgba($white, 0.7);
+    border: 1px solid rgba($white, 0.14);
+    background: rgba($white, 0.05);
+    color: rgba($white, 0.62);
     font-size: 0.85rem;
     font-weight: 600;
-    transition: all 0.2s ease;
+    transition: all 0.18s ease;
   }
 
   &.is-active span,
   &:has(input:checked) span {
-    background: linear-gradient(135deg, rgba($violet-500, 0.5), rgba($magenta-500, 0.5));
-    border-color: rgba($violet-500, 0.8);
-    color: $white;
-  }
-}
-
-// ── Range sliders ─────────────────────────────────────────────────────────────
-
-.range-filters {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.range-filter {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.range-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 16px;
-  border-radius: 999px;
-  border: 1px solid rgba($violet-500, 0.35);
-  background: rgba($violet-500, 0.08);
-  color: rgba($white, 0.6);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
-
-  .is-active & {
-    background: linear-gradient(135deg, rgba($violet-500, 0.4), rgba($magenta-500, 0.4));
-    border-color: rgba($violet-500, 0.7);
-    color: $white;
-  }
-}
-
-.range-chip__value {
-  font-weight: 400;
-  opacity: 0.85;
-}
-
-.range-filter__body {
-  display: none;
-  padding: 0 4px;
-
-  .is-active & {
-    display: block;
-  }
-}
-
-.filter-range {
-  -webkit-appearance: none;
-  width: 100%;
-  height: 4px;
-  border-radius: 999px;
-  background: rgba($violet-500, 0.3);
-  outline: none;
-
-  &::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
     background: linear-gradient(135deg, $violet-500, $magenta-500);
-    cursor: pointer;
-    box-shadow: 0 0 8px rgba($violet-500, 0.6);
+    border-color: transparent;
+    color: $white;
+    box-shadow: 0 2px 12px rgba($violet-500, 0.4);
   }
 }
 
@@ -289,6 +414,10 @@
   border-radius: 14px;
   margin-top: 4px;
   overflow: hidden;
+
+  // When there are no results the div is empty — don't render a stray bordered
+  // line stuck under the search field.
+  &:empty { display: none; }
 }
 
 .seed-result {
@@ -322,31 +451,35 @@
   margin-bottom: 6px;
 }
 
-.filters-form select,
 .seed-input {
   width: 100%;
   padding: 12px 14px;
-  border: 1px solid rgba($violet-500, 0.4);
+  border: 1px solid rgba($white, 0.12);
   border-radius: 14px;
-  font-size: 1rem;
-  background: #15131f;
+  font-size: 0.95rem;
+  background: rgba($white, 0.05);
   color: $white;
 
   &:focus {
     outline: none;
-    border-color: $violet-500;
-    box-shadow: 0 0 0 3px rgba($violet-500, 0.3);
+    border-color: rgba($violet-500, 0.6);
+    box-shadow: 0 0 0 3px rgba($violet-500, 0.15);
   }
 }
 
-.filters-form select option {
-  background: #15131f;
-  color: $white;
+.filters-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  background: #08080f;
+  padding: 14px 20px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba($white, 0.06);
 }
 
 .btn-apply-filters {
-  margin-top: 10px;
-  padding: 14px;
+  width: 100%;
+  padding: 16px;
   border: none;
   border-radius: 999px;
   background: linear-gradient(135deg, $violet-500, $magenta-500);
@@ -354,7 +487,10 @@
   font-weight: 800;
   font-size: 1rem;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba($violet-500, 0.5);
+  box-shadow: 0 6px 24px rgba($violet-500, 0.5);
+  transition: transform 0.15s ease;
+
+  &:active { transform: scale(0.98); }
 }
 
 .cards-stack {
@@ -601,32 +737,31 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  margin-top: 12px;
 }
 
 .filters-switches .switch {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  flex-wrap: nowrap !important;
+  display: flex;
+  align-items: flex-start;
   gap: 12px;
-  margin: 0 !important;
-
-  font-size: 0.9rem !important;
-  font-weight: 600 !important;
-  line-height: 1.35;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
   color: rgba($white, 0.8);
-  white-space: normal;
-  min-width: 0;
-  flex: 1;
+  cursor: pointer;
 }
 
 .filters-switches .switch input[type="checkbox"] {
-  flex: 0 0 auto;
+  flex-shrink: 0;
   width: 20px;
   height: 20px;
-  margin: 2px 0 0 0 !important;
+  margin-top: 1px;
   accent-color: $violet-500;
+}
+
+.switch__hint {
+  font-weight: 400;
+  opacity: 0.55;
+  font-size: 0.82rem;
 }
 
 .btn-spotify {
