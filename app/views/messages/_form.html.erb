@@ -10,7 +10,8 @@
     <div class="track-search__results" data-track-search-target="results"></div>
   </div>
 
-  <%= form_with model: [conversation, message], class: "chat-form" do |f| %>
+  <%= form_with model: [conversation, message], class: "chat-form",
+                data: { action: "turbo:submit-end->chat#resetForm" } do |f| %>
     <button type="button" class="chat-form__music" data-action="track-search#togglePanel" aria-label="Partager un son">
       <i class="fa-solid fa-music"></i>
     </button>

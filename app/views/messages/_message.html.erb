@@ -1,7 +1,9 @@
 <%# Neutral bubble (alignment applied client-side by the chat controller, since
     Turbo broadcasts render this without a current_user). Carries text and/or a
     shared track card. %>
-<div class="msg" data-sender-id="<%= message.user_id %>" data-timestamp="<%= message.created_at.to_i %>" id="<%= dom_id(message) %>">
+<div class="msg" data-sender-id="<%= message.user_id %>"
+     data-conversation-id="<%= message.conversation_id %>"
+     data-timestamp="<%= message.created_at.to_i %>" id="<%= dom_id(message) %>">
   <% if message.shared_track? && message.song %>
     <% song = message.song %>
     <div class="track-card">
