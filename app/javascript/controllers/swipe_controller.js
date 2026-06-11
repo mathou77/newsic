@@ -9,6 +9,12 @@ export default class extends Controller {
     this.audioUnlocked = false
     this.isSeeking     = false
     this.startX        = 0
+    this.startY        = 0
+    this.dragging      = false  // a finger is currently dragging the active card
+    this.dragCard      = null
+    this.dragDX        = 0
+    this.suppressFlip  = false  // a drag just ended — don't let its click flip the card
+    this.history       = []     // voted cards we can bring back
 
     this._seekMouseDown  = (e) => { if (e.target.closest(".player-bar__progress")) { this.isSeeking = true;  this.seekFromClientX(e.clientX) } }
     this._seekMouseMove  = (e) => { if (this.isSeeking) this.seekFromClientX(e.clientX) }
@@ -65,6 +71,7 @@ export default class extends Controller {
   // ── Flip ──────────────────────────────────────────────────────────────────────
 
   flip(event) {
+    if (this.suppressFlip) { this.suppressFlip = false; return } // a drag just ended
     if (event.target.closest(".card-player-bar"))  return
     if (event.target.closest(".card-share"))        return
     if (event.target.closest(".card-artist-link"))  return
@@ -106,16 +113,60 @@ export default class extends Controller {
   // ── Touch Swipe ───────────────────────────────────────────────────────────────
 
   touchStart(event) {
-    this.startX = event.touches[0].clientX
-  }
+    // Reset drag state for every new touch so a bailed-out gesture never leaks
+    // into the next one.
+    this.dragging     = false
+    this.dragCard     = null
+    this.dragDX       = 0
+    this.suppressFlip = false
 
-  touchEnd(event) {
     if (this.isSeeking) return
     if (this.element.querySelector(".share-sheet.is-open")) return
-    const diff = event.changedTouches[0].clientX - this.startX
-    if (!this.activeCard) return
-    if (diff > 80)  this.vote("liked")
-    if (diff < -80) this.vote("disliked")
+    // Don't drag the card when the touch starts on the surrounding UI or on the
+    // card's own controls (player bar, share, artist link) — those handle taps.
+    if (event.target.closest(".filters-panel")) return
+    if (event.target.closest(".card-player-bar, .card-share, .card-artist-link")) return
+
+    const card = this.activeCard
+    if (!card) return
+    if (card.querySelector(".flip-card-inner.is-flipped")) return // don't drag a flipped card
+
+    this.startX        = event.touches[0].clientX
+    this.startY        = event.touches[0].clientY
+    this.dragCard      = card
+    this.dragging      = true
+    card.style.transition = "none" // follow the finger with no easing lag
+  }
+
+  touchMove(event) {
+    if (!this.dragging || !this.dragCard) return
+    const dx = event.touches[0].clientX - this.startX
+    const dy = event.touches[0].clientY - this.startY
+    this.dragDX = dx
+    // Slight rotation tied to horizontal distance, like a card being flicked.
+    const rot = Math.max(-12, Math.min(12, dx / 14))
+    this.dragCard.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`
+  }
+
+  touchEnd() {
+    if (!this.dragging || !this.dragCard) return
+    const card = this.dragCard
+    const dx   = this.dragDX
+    this.dragging = false
+    this.dragCard = null
+
+    card.style.transition = "" // restore the CSS easing for fly-off / snap-back
+    if (Math.abs(dx) > 10) this.suppressFlip = true // it was a drag, not a tap
+
+    if (dx > 80) {
+      card.style.transform = ""  // let .fly-right take over
+      this.vote("liked")
+    } else if (dx < -80) {
+      card.style.transform = ""  // let .fly-left take over
+      this.vote("disliked")
+    } else {
+      card.style.transform = ""  // snap back to centre
+    }
   }
 
   // ── Audio ─────────────────────────────────────────────────────────────────────

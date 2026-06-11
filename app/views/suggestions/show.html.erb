@@ -8,7 +8,7 @@
      data-controller="share-sheet swipe"
      data-swipe-recap-url-value="<%= recap_suggestion_path(@suggestion) %>"
      data-share-sheet-url-value="<%= shares_path %>"
-     data-action="touchstart->swipe#touchStart touchend->swipe#touchEnd">
+     data-action="touchstart->swipe#touchStart touchmove->swipe#touchMove touchend->swipe#touchEnd">
 
   <div data-controller="filters">
     <button type="button" class="filters-toggle" id="filters-toggle"

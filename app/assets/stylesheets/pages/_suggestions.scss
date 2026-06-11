@@ -1,7 +1,29 @@
+// Ambient cover colour — a registered custom property so it can be transitioned.
+// JS sets it from the active card's data-color; CSS crossfades over 0.6s.
+@property --ambient-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #0a0a1a;
+}
+
+// Lock the page while the swiper is on screen: no vertical scroll, overscroll
+// bounce or pull-to-refresh — only the cards' horizontal gestures respond.
+// Inner overlays (filters panel, share/playlist sheets) keep their own scroll.
+html:has(.swipe-container),
+body:has(.swipe-container) {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: pan-x;
+}
+
 .swipe-container {
   position: relative;
   min-height: 100vh;
-  padding: 28px 24px 70px;
+  padding: 12px 16px 70px;
+  // padding: 28px 24px 70px;
+  overscroll-behavior: none;
+  touch-action: pan-x;
 
   display: flex;
   flex-direction: column;
@@ -93,6 +115,7 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  touch-action: pan-y; // re-enable vertical scroll inside the locked page
   transform: translateX(-50%) translateY(100%);
   transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1);
 
@@ -549,6 +572,7 @@
   max-width: 340px;
   height: 520px;
   margin: 0 auto;
+  touch-action: none; // the card drag is fully JS-driven; no native gestures here
 }
 
 .swipe-card {
@@ -1101,4 +1125,151 @@
   border-radius: 12px;
   color: rgba(29, 185, 84, 0.85);
   letter-spacing: 0.02em;
+}
+
+// ── Playlist sheet (Newsic) ───────────────────────────────────────────────────
+.playlist-sheet { position: fixed; inset: 0; z-index: 80; }
+
+.playlist-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.playlist-sheet__panel {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 100%;
+  max-width: 430px; // match the mobile-app frame
+  max-height: 78vh;
+  display: flex;
+  flex-direction: column;
+  background: #12101c;
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid rgba($violet-500, 0.4);
+  transform: translateX(-50%) translateY(100%);
+  transition: transform 0.25s ease;
+}
+.playlist-sheet.is-open .playlist-sheet__panel { transform: translateX(-50%) translateY(0); }
+
+.playlist-sheet__head {
+  flex-shrink: 0;
+  padding: 12px 20px 10px;
+  border-bottom: 1px solid rgba($white, 0.06);
+}
+
+.playlist-sheet__grabber {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba($white, 0.25);
+  margin: 0 auto 12px;
+}
+
+.playlist-sheet__titlerow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.playlist-sheet__title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, $violet-500, $magenta-500);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.playlist-sheet__close {
+  background: none;
+  border: none;
+  color: rgba($white, 0.6);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.playlist-sheet__count {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: rgba($white, 0.45);
+}
+
+.playlist-sheet__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y; // re-enable vertical scroll inside the locked page
+  padding: 8px 12px calc(16px + env(safe-area-inset-bottom));
+}
+
+.pl-song {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border: none;
+  background: none;
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+
+  &:hover { background: rgba($white, 0.05); }
+  &.is-playing { background: rgba($violet-500, 0.14); }
+}
+
+.pl-song__cover {
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  overflow: hidden;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.pl-song__icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  color: $white;
+  font-size: 0.85rem;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+
+  .pl-song:hover &,
+  .pl-song.is-playing & { opacity: 1; }
+}
+
+.pl-song__meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pl-song__title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: $white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pl-song__artist {
+  font-size: 0.8rem;
+  color: rgba($white, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

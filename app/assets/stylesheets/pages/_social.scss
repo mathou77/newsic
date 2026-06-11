@@ -943,6 +943,7 @@ $msg-bg: #0a0a1a;
   flex-direction: column;
   gap: 6px;
   overflow-y: auto;
+  touch-action: pan-y; // re-enable vertical scroll inside the locked swiper page
 }
 
 .share-friend {
