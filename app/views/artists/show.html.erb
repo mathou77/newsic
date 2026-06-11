@@ -1,0 +1,120 @@
+<div class="artist-page">
+
+  <%# ── Header ─────────────────────────────────────────────────────────── %>
+  <div class="artist-hero" style="<%= "background-image: url('#{@artist_info['image']}');" if @artist_info&.dig('image') %>">
+    <div class="artist-hero__overlay"></div>
+    <div class="artist-hero__content">
+      <% if @artist_info&.dig("image") %>
+        <%= image_tag @artist_info["image"], alt: @artist_name, class: "artist-hero__portrait" %>
+      <% else %>
+        <div class="artist-hero__portrait artist-hero__portrait--fallback">🎤</div>
+      <% end %>
+      <h1 class="artist-hero__name"><%= @artist_name %></h1>
+      <% if @liked_songs.any? %>
+        <p class="artist-hero__sub"><%= @liked_songs.count %> son<%= @liked_songs.count > 1 ? "s" : "" %> liké<%= @liked_songs.count > 1 ? "s" : "" %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <%# ── Swiper CTA ──────────────────────────────────────────────────────── %>
+  <div class="artist-swipe-cta">
+    <%= form_with url: suggestions_path, method: :post, data: { turbo: false } do %>
+      <input type="hidden" name="seed_artists[]" value="<%= @artist_name %>">
+      <input type="hidden" name="seed_artist_images[]" value="<%= @artist_info&.dig('image') %>">
+      <input type="hidden" name="count" value="10">
+      <input type="hidden" name="time_range" value="long_term">
+      <button type="submit" class="btn-swipe-artist">
+        <i class="fa-solid fa-shuffle"></i>
+        Swiper avec <%= @artist_name %>
+      </button>
+    <% end %>
+  </div>
+
+  <%# ── Liked songs ─────────────────────────────────────────────────────── %>
+  <% if @liked_songs.any? %>
+    <section class="artist-section">
+      <h2 class="artist-section__title">Tes sons likés</h2>
+      <div class="track-list">
+        <% @liked_songs.each do |song| %>
+          <div class="track-row">
+            <% if song.image_url.present? %>
+              <%= image_tag song.image_url, alt: "", class: "track-row__cover" %>
+            <% else %>
+              <div class="track-row__cover track-row__cover--fallback">🎵</div>
+            <% end %>
+            <div class="track-row__info">
+              <span class="track-row__title"><%= song.title %></span>
+              <span class="track-row__artist"><%= song.artist %></span>
+            </div>
+            <% if song.preview_url.present? %>
+              <button type="button" class="track-row__play"
+                      data-preview="<%= preview_song_path(song) %>"
+                      aria-label="Écouter">
+                <i class="fa-solid fa-play"></i>
+              </button>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <%# ── Recommended ─────────────────────────────────────────────────────── %>
+  <% if @recommended.any? %>
+    <section class="artist-section">
+      <h2 class="artist-section__title">Sons recommandés</h2>
+      <div class="track-list">
+        <% @recommended.each do |track| %>
+          <div class="track-row">
+            <% if track["image"].present? %>
+              <%= image_tag track["image"], alt: "", class: "track-row__cover" %>
+            <% else %>
+              <div class="track-row__cover track-row__cover--fallback">🎵</div>
+            <% end %>
+            <div class="track-row__info">
+              <span class="track-row__title"><%= track["title"] %></span>
+              <span class="track-row__artist"><%= track["artist"] %></span>
+            </div>
+            <% if track["preview_url"].present? %>
+              <button type="button" class="track-row__play"
+                      data-preview="<%= track["preview_url"] %>"
+                      aria-label="Écouter">
+                <i class="fa-solid fa-play"></i>
+              </button>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+</div>
+
+<%# Mini audio player for preview buttons on this page %>
+<audio id="artist-page-audio"></audio>
+
+<script nonce="<%= content_security_policy_nonce %>">
+  document.querySelectorAll(".track-row__play").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const audio = document.getElementById("artist-page-audio")
+      const url   = btn.dataset.preview
+      const icon  = btn.querySelector("i")
+
+      // Toggle same track
+      if (audio.src.endsWith(encodeURIComponent(url)) || audio.src === url) {
+        if (audio.paused) { audio.play(); icon.className = "fa-solid fa-pause" }
+        else { audio.pause(); icon.className = "fa-solid fa-play" }
+        return
+      }
+
+      // Reset all buttons
+      document.querySelectorAll(".track-row__play i").forEach(i => i.className = "fa-solid fa-play")
+
+      audio.src = url
+      audio.play().catch(() => {})
+      icon.className = "fa-solid fa-pause"
+
+      audio.onended = () => { icon.className = "fa-solid fa-play" }
+    })
+  })
+</script>

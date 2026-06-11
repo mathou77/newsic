@@ -9,8 +9,8 @@
   <% end %>
 
   <div class="notif__content">
-    <% case notification.kind
-       when "friend_request" then %>
+    <% case notification.kind %>
+      <% when "friend_request" then %>
       <p class="notif__text"><strong><%= actor.display_name %></strong> veut être ton ami</p>
       <div class="notif__actions">
         <%= button_to "Accepter", accept_notification_path(notification),

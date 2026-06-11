@@ -27,9 +27,11 @@
         <% @conversations.each do |conversation| %>
           <% other = conversation.other_than(current_user) %>
           <li>
-            <%= link_to conversation_path(conversation), class: "conversation-row" do %>
-              <span class="user-row__avatar"><%= avatar_for(other, size: 52) %></span>
-              <span class="conversation-row__info">
+            <div class="conversation-row">
+              <%= link_to user_path(other), class: "user-row__avatar conversation-row__avatar-link" do %>
+                <%= avatar_for(other, size: 52) %>
+              <% end %>
+              <%= link_to conversation_path(conversation), class: "conversation-row__info" do %>
                 <span class="conversation-row__name"><%= other.display_name %></span>
                 <span class="conversation-row__preview">
                   <% last = conversation.last_message %>
@@ -39,8 +41,8 @@
                     <%= last&.body&.truncate(40) || "Démarrez la conversation" %>
                   <% end %>
                 </span>
-              </span>
-            <% end %>
+              <% end %>
+            </div>
           </li>
         <% end %>
       </ul>
@@ -74,10 +76,10 @@
     <% else %>
       <% @pending.each do |friendship| %>
         <div class="request-row">
-          <div class="request-row__main">
+          <%= link_to user_path(friendship.requester), class: "request-row__main" do %>
             <span class="user-row__avatar"><%= avatar_for(friendship.requester, size: 44) %></span>
             <span class="user-row__name"><%= friendship.requester.display_name %></span>
-          </div>
+          <% end %>
           <div class="friend-actions">
             <%= button_to "Accepter", friendship_path(friendship), method: :patch,
                           class: "btn-friend btn-friend--primary" %>

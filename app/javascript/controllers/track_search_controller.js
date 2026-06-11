@@ -38,14 +38,20 @@ export default class extends Controller {
     fetch(this.sendUrlValue, {
       method: "POST",
       headers: {
+        "Accept": "text/vnd.turbo-stream.html",
         "Content-Type": "application/json",
         "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content
       },
       body: JSON.stringify({ track: { artist: track.artist, title: track.title } })
-    }).then(() => {
-      this.resultsTarget.innerHTML = ""
-      this.inputTarget.value = ""
-      this.panelTarget.hidden = true
     })
+      .then((r) => r.text())
+      .then((html) => {
+        // Apply the returned stream so the sender's own track card shows up
+        // instantly, just like a text message.
+        if (window.Turbo) window.Turbo.renderStreamMessage(html)
+        this.resultsTarget.innerHTML = ""
+        this.inputTarget.value = ""
+        this.panelTarget.hidden = true
+      })
   }
 }

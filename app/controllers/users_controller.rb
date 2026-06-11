@@ -16,6 +16,27 @@ class UsersController < ApplicationController
     @user = User.find(params[:id])
     redirect_to(profile_path) and return if @user == current_user
 
-    @friendship = current_user.friendship_with(@user)
+    @friendship     = current_user.friendship_with(@user)
+    @playlist_count = @user.suggestions.count
+    @friend_count   = @user.friends.count
+    @friends        = @user.friends.order(:display_name)
+
+    enrich_artist_images(@user) if @user.artist_cards.any? { |a| a["image"].blank? }
+  end
+
+  private
+
+  # Fetches missing artist images from Deezer and saves them to the user record.
+  # Only runs once per user (until all images are present).
+  def enrich_artist_images(user)
+    deezer = DeezerService.new
+    enriched = user.artist_cards.map do |a|
+      next a if a["image"].present?
+      info = deezer.artist_info(a["name"])
+      a.merge("image" => info&.dig("image"))
+    end
+    user.update_columns(top_artists: enriched)
+  rescue => e
+    Rails.logger.warn("enrich_artist_images failed: #{e.message}")
   end
 end

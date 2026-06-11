@@ -2,9 +2,10 @@
 
 <div class="chat-page"
      data-controller="chat"
-     data-chat-current-user-id-value="<%= current_user.id %>">
+     data-chat-current-user-id-value="<%= current_user.id %>"
+     data-chat-conversation-id-value="<%= @conversation.id %>">
 
-  <%= turbo_stream_from @conversation %>
+  <%= turbo_stream_from "user_#{current_user.id}_messages" %>
 
   <header class="chat-header">
     <%= link_to conversations_path, class: "chat-header__back" do %>

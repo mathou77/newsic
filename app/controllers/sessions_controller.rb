@@ -41,7 +41,9 @@ class SessionsController < ApplicationController
     top_tracks = spotify.top_tracks(limit: 50) rescue []
 
     user.update(
-      top_artists:               artists.first(8).map { |a| a["name"] }.compact,
+      top_artists:               artists.first(8).map { |a|
+                                   { "name" => a["name"], "image" => a.dig("images", 1, "url") || a.dig("images", 0, "url") }
+                                 }.compact,
       top_genres:                artists.flat_map { |a| a["genres"] || [] }
                                         .tally.sort_by { |_g, n| -n }.first(6).map(&:first),
       top_tracks:                top_tracks,

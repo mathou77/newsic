@@ -32,6 +32,8 @@ class SuggestionsController < ApplicationController
     count       = (@filters[:count].presence || 10).to_i
     @playlists  = @suggestion.playlists.pending.includes(:song).limit(count)
     @friends    = current_user.friends
+    # Previews are served fresh through SongsController#preview (Deezer URLs
+    # expire within minutes), so there is nothing to pre-refresh here.
   end
 
   def recap
@@ -95,11 +97,13 @@ class SuggestionsController < ApplicationController
       count:        (params[:count].presence || 10).to_i.clamp(5, 50),
       decade:       params[:decade].presence,
       tempo:        TEMPOS.include?(params[:tempo]) ? params[:tempo] : nil,
-      diverse:       params[:diverse].present?,
-      discovery:     params[:discovery].present?,
-      exclude_liked: true,
-      seed_artists: clean_seeds(params[:seed_artists]),
-      seed_tracks:  clean_seeds(params[:seed_tracks])
+      diverse:          params[:diverse].present?,
+      discovery:        params[:discovery].present?,
+      exclude_liked:    true,
+      exclude_disliked: params[:exclude_disliked].present?,
+      seed_artists:       clean_seeds(params[:seed_artists]),
+      seed_artist_images: Array(params[:seed_artist_images]).map(&:to_s).first(MAX_SEEDS),
+      seed_tracks:        clean_seeds(params[:seed_tracks])
     }
   end
 

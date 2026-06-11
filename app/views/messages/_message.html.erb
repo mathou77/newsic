@@ -1,7 +1,9 @@
 <%# Neutral bubble (alignment applied client-side by the chat controller, since
     Turbo broadcasts render this without a current_user). Carries text and/or a
     shared track card. %>
-<div class="msg" data-sender-id="<%= message.user_id %>" id="<%= dom_id(message) %>">
+<div class="msg" data-sender-id="<%= message.user_id %>"
+     data-conversation-id="<%= message.conversation_id %>"
+     data-timestamp="<%= message.created_at.to_i %>" id="<%= dom_id(message) %>">
   <% if message.shared_track? && message.song %>
     <% song = message.song %>
     <div class="track-card">
@@ -19,7 +21,7 @@
       <% end %>
       <% if song.preview_url.present? %>
         <span class="track-card__play" data-controller="preview">
-          <audio data-preview-target="audio" src="<%= song.preview_url %>" preload="none"></audio>
+          <audio data-preview-target="audio" src="<%= preview_song_path(song) %>" preload="none"></audio>
           <button type="button" class="track-play" data-action="preview#toggle" data-preview-target="button"><i class="fa-solid fa-play"></i></button>
         </span>
       <% end %>

@@ -10,12 +10,15 @@ class Message < ApplicationRecord
   # Real-time delivery: append the rendered message to every subscriber of
   # this conversation's Turbo stream as soon as it is committed.
   after_create_commit do
-    broadcast_append_to(
-      conversation,
-      target: "messages",
-      partial: "messages/message",
-      locals: { message: self }
-    )
+    recipient = conversation.other_than(user)
+    if recipient
+      broadcast_append_to(
+        "user_#{recipient.id}_messages",
+        target: "messages",
+        partial: "messages/message",
+        locals: { message: self }
+      )
+    end
     notify_recipient
   end
 

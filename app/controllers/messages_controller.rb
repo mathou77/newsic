@@ -11,14 +11,15 @@ class MessagesController < ApplicationController
     attach_song(@message)
 
     if @message.save
-      # The bubble append + broadcast to the other party both happen via the
-      # model's after_create_commit Turbo broadcast. Just reset the form here.
+      # Render the sender's own bubble straight back in the HTTP response so it
+      # appears instantly — no waiting on the WebSocket round-trip. The form is
+      # cleared client-side (chat#resetForm) to keep the input focused.
       respond_to do |format|
         format.turbo_stream do
-          render turbo_stream: turbo_stream.replace(
-            "message_form",
-            partial: "messages/form",
-            locals: { conversation: conversation, message: Message.new }
+          render turbo_stream: turbo_stream.append(
+            "messages",
+            partial: "messages/message",
+            locals: { message: @message }
           )
         end
         format.html { redirect_to conversation_path(conversation) }
