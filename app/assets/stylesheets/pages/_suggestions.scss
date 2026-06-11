@@ -6,10 +6,24 @@
   initial-value: #0a0a1a;
 }
 
+// Lock the page while the swiper is on screen: no vertical scroll, overscroll
+// bounce or pull-to-refresh — only the cards' horizontal gestures respond.
+// Inner overlays (filters panel, share/playlist sheets) keep their own scroll.
+html:has(.swipe-container),
+body:has(.swipe-container) {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: pan-x;
+}
+
 .swipe-container {
   position: relative;
   min-height: 100vh;
   padding: 12px 16px 70px;
+  // padding: 28px 24px 70px;
+  overscroll-behavior: none;
+  touch-action: pan-x;
 
   display: flex;
   flex-direction: column;
@@ -167,6 +181,7 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  touch-action: pan-y; // re-enable vertical scroll inside the locked page
   transform: translateX(-50%) translateY(100%);
   transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1);
 
@@ -623,6 +638,7 @@
   max-width: 340px;
   height: 520px;
   margin: 0 auto;
+  touch-action: none; // the card drag is fully JS-driven; no native gestures here
 }
 
 .swipe-card {
@@ -651,6 +667,33 @@
   width: 100%;
   height: 330px;
   object-fit: cover;
+  transition: filter 0.3s ease; // smooth un-grey when the card snaps back
+}
+
+// Like / dislike feedback shown while dragging a card. JS fades these in via
+// inline opacity proportional to the drag distance.
+.swipe-badge {
+  position: absolute;
+  top: 90px;
+  z-index: 12;
+  font-size: 6rem;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.55));
+}
+
+.swipe-badge--dislike {
+  left: 28px;
+  color: #ff3b30;
+  transform: rotate(-14deg);
+}
+
+.swipe-badge--like {
+  right: 28px;
+  color: #2ec67a;
+  transform: rotate(14deg);
 }
 
 .card-info {
@@ -1289,6 +1332,7 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  touch-action: pan-y; // re-enable vertical scroll inside the locked page
   padding: 8px 12px calc(16px + env(safe-area-inset-bottom));
 }
 

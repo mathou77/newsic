@@ -8,7 +8,7 @@
      data-controller="share-sheet swipe playlist-sheet"
      data-swipe-recap-url-value="<%= recap_suggestion_path(@suggestion) %>"
      data-share-sheet-url-value="<%= shares_path %>"
-     data-action="touchstart->swipe#touchStart touchend->swipe#touchEnd">
+     data-action="touchstart->swipe#touchStart touchmove->swipe#touchMove touchend->swipe#touchEnd">
 
   <div class="swipe-topbar">
     <div class="swipe-topbar__right">
@@ -233,6 +233,14 @@
               </button>
 
               <img src="<%= playlist.song.image_url %>" alt="<%= playlist.song.title %>" class="card-cover" crossorigin="anonymous">
+
+              <%# Swipe feedback badges — fade in as the card is dragged toward an edge. %>
+              <div class="swipe-badge swipe-badge--dislike" aria-hidden="true">
+                <i class="fa-solid fa-xmark"></i>
+              </div>
+              <div class="swipe-badge swipe-badge--like" aria-hidden="true">
+                <i class="fa-solid fa-heart"></i>
+              </div>
 
               <div class="card-player-bar">
                 <button type="button" class="player-bar__toggle"
