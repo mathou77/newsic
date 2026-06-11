@@ -103,7 +103,8 @@ class SuggestionsController < ApplicationController
       exclude_disliked: params[:exclude_disliked].present?,
       seed_artists:       clean_seeds(params[:seed_artists]),
       seed_artist_images: Array(params[:seed_artist_images]).map(&:to_s).first(MAX_SEEDS),
-      seed_tracks:        clean_seeds(params[:seed_tracks])
+      seed_tracks:        clean_seeds(params[:seed_tracks]),
+      seed_track_images:  Array(params[:seed_track_images]).map(&:to_s).first(MAX_SEEDS)
     }
   end
 

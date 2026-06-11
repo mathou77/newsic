@@ -53,7 +53,8 @@
                data-seed-search-url-value="<%= seed_search_suggestions_path %>"
                data-seed-search-initial-artists-value="<%= (@filters[:seed_artists] || []).to_json %>"
                data-seed-search-initial-artist-images-value="<%= (@filters[:seed_artist_images] || []).to_json %>"
-               data-seed-search-initial-tracks-value="<%= (@filters[:seed_tracks] || []).to_json %>">
+               data-seed-search-initial-tracks-value="<%= (@filters[:seed_tracks] || []).to_json %>"
+               data-seed-search-initial-track-images-value="<%= (@filters[:seed_track_images] || []).to_json %>">
             <div class="filters-section__head">
               <span class="filters-section__title">Artistes / Titres</span>
             </div>
@@ -184,7 +185,7 @@
         </div>
 
         <div class="filters-footer">
-          <%= submit_tag "Démarrer", class: "btn-apply-filters" %>
+          <%= submit_tag "Appliquer", class: "btn-apply-filters" %>
         </div>
       <% end %>
     </div>
