@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["card"]
+  static targets = ["card", "back"]
   static values  = { recapUrl: String }
 
   connect() {
@@ -9,6 +9,7 @@ export default class extends Controller {
     this.audioUnlocked = false
     this.isSeeking     = false
     this.startX        = 0
+    this.history       = []     // voted cards we can bring back
 
     this._seekMouseDown  = (e) => { if (e.target.closest(".player-bar__progress")) { this.isSeeking = true;  this.seekFromClientX(e.clientX) } }
     this._seekMouseMove  = (e) => { if (this.isSeeking) this.seekFromClientX(e.clientX) }
@@ -24,7 +25,7 @@ export default class extends Controller {
     document.addEventListener("touchmove",  this._seekTouchMove,  { passive: true })
     document.addEventListener("touchend",   this._seekTouchEnd)
 
-    this.cardTargets.forEach(card => this.applyCardColor(card))
+    this.applyCardColor(this.activeCard)
     this.updatePlayerIcon()
     this.armUpcoming()
 
@@ -80,19 +81,16 @@ export default class extends Controller {
     const card = this.activeCard
     if (!card) return
 
-    fetch(card.dataset.voteUrl, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
-      },
-      body: JSON.stringify({ status })
-    })
-
+    this.sendVote(card, status)
     card.classList.add(status === "liked" ? "fly-right" : "fly-left")
 
     setTimeout(() => {
       card.remove()
+      // Only now that it's detached do we offer it for "back" — avoids this
+      // pending removal racing with a restore.
+      this.history.push(card)
+      this.updateBackButton()
+
       const remaining = this.cardTargets
       if (remaining.length === 0) {
         window.location.href = this.recapUrlValue
@@ -101,6 +99,41 @@ export default class extends Controller {
         this.playCurrentAudio()
       }
     }, 400)
+  }
+
+  // Bring the last voted card back, undo its vote on the server, and make it the
+  // active card again.
+  back() {
+    const card = this.history.pop()
+    if (!card) return
+
+    this.sendVote(card, "pending")
+
+    card.classList.remove("fly-left", "fly-right")
+    this.activeCard?.classList.remove("active")
+
+    const stack = this.element.querySelector(".cards-stack")
+    stack?.prepend(card)
+    card.classList.add("active")
+
+    this.playCurrentAudio()
+    this.updateBackButton()
+  }
+
+  sendVote(card, status) {
+    fetch(card.dataset.voteUrl, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify({ status })
+    })
+  }
+
+  updateBackButton() {
+    if (!this.hasBackTarget) return
+    this.backTarget.hidden = this.history.length === 0
   }
 
   // ── Touch Swipe ───────────────────────────────────────────────────────────────
@@ -112,6 +145,9 @@ export default class extends Controller {
   touchEnd(event) {
     if (this.isSeeking) return
     if (this.element.querySelector(".share-sheet.is-open")) return
+    // Don't treat scrolling the mood bar or interacting with the filters panel
+    // as a card swipe vote.
+    if (event.target.closest(".swipe-topbar, .mood-bar, .filters-panel, .playlist-sheet")) return
     const diff = event.changedTouches[0].clientX - this.startX
     if (!this.activeCard) return
     if (diff > 80)  this.vote("liked")
@@ -215,36 +251,16 @@ export default class extends Controller {
 
   // ── Dominant Color ────────────────────────────────────────────────────────────
 
+  // The ambient colour is precomputed server-side and carried on the card as
+  // data-color. We drive a single registered custom property (--ambient-color)
+  // that both the page background and the card's back face read; the CSS
+  // transition crossfades it over ~0.6s as cards change.
   applyCardColor(card) {
-    const img = card.querySelector(".card-cover")
-    if (!img) return
-    const apply = () => this.getDominantColor(img, color => {
-      if (!color) return
-      const { r, g, b } = color
-      this.element.style.background = `
-        radial-gradient(circle at 50% 40%, rgba(${r},${g},${b},0.45) 0%, rgba(${r},${g},${b},0.08) 55%, #050510 80%),
-        #050510
-      `
-    })
-    if (img.complete) apply()
-    else img.addEventListener("load", apply)
-  }
-
-  getDominantColor(img, callback) {
-    try {
-      const canvas = document.createElement("canvas")
-      canvas.width = canvas.height = 32
-      const ctx = canvas.getContext("2d")
-      ctx.drawImage(img, 0, 0, 32, 32)
-      const data = ctx.getImageData(0, 0, 32, 32).data
-      let r = 0, g = 0, b = 0, count = 0
-      for (let i = 0; i < data.length; i += 16) {
-        const pr = data[i], pg = data[i + 1], pb = data[i + 2]
-        const brightness = (pr + pg + pb) / 3
-        if (brightness > 30 && brightness < 230) { r += pr; g += pg; b += pb; count++ }
-      }
-      if (count === 0) { callback(null); return }
-      callback({ r: Math.round(r / count), g: Math.round(g / count), b: Math.round(b / count) })
-    } catch (e) { callback(null) }
+    const color = card?.dataset.color
+    if (color) {
+      this.element.style.setProperty("--ambient-color", color)
+    } else {
+      this.element.style.removeProperty("--ambient-color") // fall back to midnight
+    }
   }
 }

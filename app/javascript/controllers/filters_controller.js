@@ -9,7 +9,6 @@ export default class extends Controller {
                ["2000", "2000s"], ["2010", "2010s"], ["2020", "2020s"]],
       tempo:  [["", "Tous"], ["slow", "Lent 🐢"], ["medium", "Moyen 🚶"], ["fast", "Rapide 🚀"]],
     }
-    this.initMoodPills()
     this.initFinetune()
     this.initRanges()
     this.updateBadge()
@@ -54,7 +53,12 @@ export default class extends Controller {
     form.querySelectorAll("input[type='radio']").forEach(r => { r.checked = false })
     form.querySelectorAll("input[type='checkbox']").forEach(c => { c.checked = false })
     form.querySelectorAll("select").forEach(s => { s.selectedIndex = 0 })
-    this.element.querySelectorAll(".mood-pill").forEach(p => p.classList.remove("is-active"))
+
+    // Mood lives in the top bar but is mirrored on this form via a hidden field;
+    // clear it and visually deselect the top mood chips.
+    const moodInput = form.querySelector("input[name='mood']")
+    if (moodInput) moodInput.value = ""
+    document.querySelectorAll(".mood-chip.is-active").forEach(c => c.classList.remove("is-active"))
 
     // Send the decade/tempo sliders back to their "off" position.
     this.element.querySelectorAll(".range-slider").forEach((r) => {
@@ -89,22 +93,12 @@ export default class extends Controller {
     toggle.addEventListener("click", () => block.classList.toggle("is-open"))
   }
 
-  initMoodPills() {
-    this.element.querySelectorAll(".mood-pill").forEach(pill => {
-      pill.addEventListener("click", () => {
-        this.element.querySelectorAll(".mood-pill").forEach(p => p.classList.remove("is-active"))
-        pill.classList.add("is-active")
-      })
-    })
-  }
-
   updateBadge() {
     let count = 0
     const form = this.element.querySelector(".filters-form")
     if (!form) return
 
     if (form.querySelector("input[name='genre']:checked")?.value) count++
-    if (form.querySelector("input[name='mood']:checked")?.value) count++
     if (form.querySelector("input[name='decade']")?.value) count++
     if (form.querySelector("input[name='tempo']")?.value) count++
 

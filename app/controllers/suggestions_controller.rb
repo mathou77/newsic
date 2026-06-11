@@ -32,6 +32,14 @@ class SuggestionsController < ApplicationController
     count       = (@filters[:count].presence || 10).to_i
     @playlists  = @suggestion.playlists.pending.includes(:song).limit(count)
     @friends    = current_user.friends
+    # The user's Newsic playlist = every song they've liked, newest first.
+    @playlist_songs = Playlist.liked
+                              .joins(:suggestion)
+                              .where(suggestions: { user_id: current_user.id })
+                              .includes(:song)
+                              .order("playlists.created_at DESC")
+                              .map(&:song)
+                              .uniq
     # Previews are served fresh through SongsController#preview (Deezer URLs
     # expire within minutes), so there is nothing to pre-refresh here.
   end
