@@ -4,11 +4,44 @@ export default class extends Controller {
   static targets = ["toggle", "panel", "badge"]
 
   connect() {
+    this.rangeMaps = {
+      decade: [["", "Toutes"], ["1970", "70s"], ["1980", "80s"], ["1990", "90s"],
+               ["2000", "2000s"], ["2010", "2010s"], ["2020", "2020s"]],
+      tempo:  [["", "Tous"], ["slow", "Lent 🐢"], ["medium", "Moyen 🚶"], ["fast", "Rapide 🚀"]],
+    }
     this.initMoodPills()
     this.initFinetune()
+    this.initRanges()
     this.updateBadge()
     this.element.querySelector(".filters-form")
       ?.addEventListener("change", () => this.updateBadge())
+  }
+
+  initRanges() {
+    this.element.querySelectorAll(".range-slider").forEach((r) => this.syncRange(r))
+  }
+
+  rangeInput(event) {
+    this.syncRange(event.target)
+    this.updateBadge()
+  }
+
+  // Map a slider's integer position to its real value + label, paint the filled
+  // portion of the track, and write the value into the hidden field that the
+  // form actually submits.
+  syncRange(range) {
+    const map = this.rangeMaps[range.dataset.rangeKey]
+    if (!map) return
+    const idx = Math.min(Number(range.value), map.length - 1)
+    const [value, label] = map[idx]
+
+    const hidden = this.element.querySelector(`#${range.dataset.rangeKey}-input`)
+    const lbl    = this.element.querySelector(`#${range.dataset.rangeKey}-label`)
+    if (hidden) hidden.value = value
+    if (lbl)    lbl.textContent = label
+
+    const pct = (idx / (map.length - 1)) * 100
+    range.style.setProperty("--range-fill", `${pct}%`)
   }
 
   open() { this.panelTarget.classList.add("open") }

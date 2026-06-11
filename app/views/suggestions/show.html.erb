@@ -101,30 +101,36 @@
                 </div>
               </div>
 
-              <%# Décennie — pills %>
+              <%# Décennie — slider %>
+              <% decades = [["","Toutes"],["1970","70s"],["1980","80s"],["1990","90s"],["2000","2000s"],["2010","2010s"],["2020","2020s"]] %>
+              <% decade_idx = decades.index { |v, _| v == @filters[:decade].to_s } || 0 %>
               <div class="filter-block">
-                <span class="filter-label">Décennie</span>
-                <div class="era-pills">
-                  <% [["70s","1970"],["80s","1980"],["90s","1990"],["2000s","2000"],["2010s","2010"],["2020s","2020"]].each do |lbl, val| %>
-                    <label class="era-pill">
-                      <%= radio_button_tag :decade, val, @filters[:decade].to_s == val %>
-                      <span><%= lbl %></span>
-                    </label>
-                  <% end %>
+                <div class="filter-label-row">
+                  <span class="filter-label">Décennie</span>
+                  <span class="range-value" id="decade-label"><%= decades[decade_idx][1] %></span>
                 </div>
+                <input type="range" class="range-slider" min="0" max="<%= decades.size - 1 %>" step="1"
+                       value="<%= decade_idx %>"
+                       data-range-key="decade"
+                       autocomplete="off"
+                       data-action="input->filters#rangeInput">
+                <input type="hidden" name="decade" id="decade-input" value="<%= @filters[:decade] %>">
               </div>
 
-              <%# Tempo — pills %>
+              <%# Tempo — slider %>
+              <% tempos = [["","Tous"],["slow","Lent 🐢"],["medium","Moyen 🚶"],["fast","Rapide 🚀"]] %>
+              <% tempo_idx = tempos.index { |v, _| v == @filters[:tempo].to_s } || 0 %>
               <div class="filter-block">
-                <span class="filter-label">Tempo</span>
-                <div class="era-pills">
-                  <% [["Lent 🐢","slow"],["Moyen 🚶","medium"],["Rapide 🚀","fast"]].each do |lbl, val| %>
-                    <label class="era-pill">
-                      <%= radio_button_tag :tempo, val, @filters[:tempo].to_s == val %>
-                      <span><%= lbl %></span>
-                    </label>
-                  <% end %>
+                <div class="filter-label-row">
+                  <span class="filter-label">Tempo</span>
+                  <span class="range-value" id="tempo-label"><%= tempos[tempo_idx][1] %></span>
                 </div>
+                <input type="range" class="range-slider" min="0" max="<%= tempos.size - 1 %>" step="1"
+                       value="<%= tempo_idx %>"
+                       data-range-key="tempo"
+                       autocomplete="off"
+                       data-action="input->filters#rangeInput">
+                <input type="hidden" name="tempo" id="tempo-input" value="<%= @filters[:tempo] %>">
               </div>
 
               <%# Genre — pills %>
