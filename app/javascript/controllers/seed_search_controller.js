@@ -59,6 +59,14 @@ export default class extends Controller {
     this.render()
   }
 
+  // Wipe every selected artist/track. Called when the filters panel is reset.
+  clear() {
+    this.seeds = []
+    this.inputTarget.value = ""
+    this.resultsTarget.innerHTML = ""
+    this.render()
+  }
+
   render() {
     this.chipsTarget.innerHTML = ""
     this.inputsTarget.innerHTML = ""

@@ -22,123 +22,170 @@
     </button>
 
     <div class="filters-panel" id="filters-panel" data-filters-target="panel">
-      <button type="button" class="filters-close" id="filters-close" data-action="filters#close">×</button>
+
+      <div class="filters-header">
+        <button type="button" class="filters-back" data-action="filters#close" aria-label="Fermer">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <h2 class="filters-title">Filtres</h2>
+        <button type="button" class="filters-reset" data-action="filters#reset">Réinitialiser</button>
+      </div>
 
       <%= form_with url: suggestions_path, method: :post, data: { turbo: false }, class: "filters-form" do %>
-        <%# 1. Artistes / Titres %>
-        <div class="seed-search"
-             id="seed-search"
-             data-controller="seed-search"
-             data-seed-search-url-value="<%= seed_search_suggestions_path %>"
-             data-seed-search-initial-artists-value="<%= (@filters[:seed_artists] || []).to_json %>"
-             data-seed-search-initial-artist-images-value="<%= (@filters[:seed_artist_images] || []).to_json %>"
-             data-seed-search-initial-tracks-value="<%= (@filters[:seed_tracks] || []).to_json %>">
-          <span class="seed-search__label">Artistes / Titres</span>
-          <input type="text" data-seed-search-target="input" class="seed-input"
-                 data-action="input->seed-search#search"
-                 placeholder="Rechercher un artiste ou un titre…" autocomplete="off">
-          <div class="seed-results" data-seed-search-target="results"></div>
-          <div class="seed-chips" data-seed-search-target="chips"></div>
-          <div data-seed-search-target="inputs"></div>
-        </div>
+        <div class="filters-body">
 
-        <%# 2. Nombre de titres %>
-        <label>
-          Nombre de titres recommandés
-          <%= select_tag :count, options_for_select(
-            [["10", "10"], ["25", "25"], ["50", "50"]],
-            (@filters[:count] || 10).to_s), autocomplete: "off" %>
-        </label>
-
-        <%# 3. Période d'écoute %>
-        <label>
-          Période d'écoute
-          <%= select_tag :time_range, options_for_select(
-            [["4 dernières semaines", "short_term"], ["6 derniers mois", "medium_term"],
-             ["Depuis toujours", "long_term"]],
-            @filters[:time_range] || "long_term"), autocomplete: "off" %>
-        </label>
-
-        <%# 4. Genre %>
-        <label>
-          Genre
-          <%= select_tag :genre, options_for_select(
-            [["--", ""], ["Pop", "pop"], ["Rock", "rock"], ["Électro", "electronic"],
-             ["Hip-hop", "hip-hop"], ["R&B", "rnb"], ["Jazz", "jazz"], ["Classique", "classical"],
-             ["Metal", "metal"], ["Indie", "indie"], ["Soul", "soul"], ["Reggae", "reggae"],
-             ["Folk", "folk"], ["House", "house"], ["Techno", "techno"]],
-            @filters[:genre]) %>
-        </label>
-
-        <%# 5. Mood avec icônes %>
-        <div class="filter-block">
-          <span class="filter-label">Mood</span>
-          <div class="mood-pills">
-            <% [["", "✨", "Tous"], ["chill", "🌙", "Chill"], ["energy", "⚡", "Énergie"],
-                ["focus", "🎯", "Focus"], ["happy", "☀️", "Happy"], ["late night", "🌃", "Late night"]].each do |value, icon, label| %>
-              <label class="mood-pill <%= 'is-active' if @filters[:mood].to_s == value %>">
-                <%= radio_button_tag :mood, value, @filters[:mood].to_s == value %>
-                <span><%= icon %> <%= label %></span>
-              </label>
-            <% end %>
-          </div>
-        </div>
-
-        <%# 6-7. Filtres curseurs %>
-        <div class="filter-block">
-          <span class="filter-label">Filtres avancés</span>
-          <div class="range-filters">
-
-            <%# Décennie %>
-            <% decade_values = ["1960", "1970", "1980", "1990", "2000", "2010", "2020"] %>
-            <% current_decade_idx = [decade_values.index(@filters[:decade].to_s) || 0, 0].max %>
-            <% decade_active = @filters[:decade].present? %>
-            <div class="range-filter <%= 'is-active' if decade_active %>" id="decade-block">
-              <button type="button" class="range-chip" id="decade-toggle">
-                Décennie<span class="range-chip__value" id="decade-label"><%= decade_active ? " · #{@filters[:decade]}s" : "" %></span>
-              </button>
-              <div class="range-filter__body">
-                <input type="range" id="decade-range" min="0" max="6" step="1" value="<%= current_decade_idx %>" class="filter-range">
+          <%# Surprise me %>
+          <button type="button" class="filters-surprise" data-action="filters#surprise">
+            <div class="filters-surprise__left">
+              <span class="filters-surprise__icon">✦</span>
+              <div>
+                <p class="filters-surprise__title">Mode découverte</p>
+                <p class="filters-surprise__sub">Laisse l'algo te sortir de ta bulle</p>
               </div>
-              <input type="hidden" name="decade" id="decade-hidden" value="<%= decade_active ? @filters[:decade] : '' %>">
             </div>
+            <i class="fa-solid fa-chevron-right filters-surprise__arrow"></i>
+          </button>
 
-            <%# Tempo %>
-            <% tempo_values = ["slow", "medium", "fast"] %>
-            <% current_tempo_idx = [tempo_values.index(@filters[:tempo].to_s) || 1, 0].max %>
-            <% tempo_active = @filters[:tempo].present? %>
-            <div class="range-filter <%= 'is-active' if tempo_active %>" id="tempo-block">
-              <button type="button" class="range-chip" id="tempo-toggle">
-                Tempo<span class="range-chip__value" id="tempo-label"><%= tempo_active ? " · #{{"slow" => "Lent 🐢", "medium" => "Moyen 🚶", "fast" => "Rapide 🚀"}[@filters[:tempo].to_s]}" : "" %></span>
-              </button>
-              <div class="range-filter__body">
-                <input type="range" id="tempo-range" min="0" max="2" step="1" value="<%= current_tempo_idx %>" class="filter-range">
-              </div>
-              <input type="hidden" name="tempo" id="tempo-hidden" value="<%= tempo_active ? @filters[:tempo] : '' %>">
+          <%# Artistes / Titres %>
+          <div class="filters-section seed-search"
+               id="seed-search"
+               data-controller="seed-search"
+               data-seed-search-url-value="<%= seed_search_suggestions_path %>"
+               data-seed-search-initial-artists-value="<%= (@filters[:seed_artists] || []).to_json %>"
+               data-seed-search-initial-artist-images-value="<%= (@filters[:seed_artist_images] || []).to_json %>"
+               data-seed-search-initial-tracks-value="<%= (@filters[:seed_tracks] || []).to_json %>">
+            <div class="filters-section__head">
+              <span class="filters-section__title">Artistes / Titres</span>
             </div>
-
+            <p class="filters-section__sub">Ajoute jusqu'à 5 exemples</p>
+            <input type="text" data-seed-search-target="input" class="seed-input"
+                   data-action="input->seed-search#search"
+                   placeholder="Rechercher un artiste ou un titre…" autocomplete="off">
+            <div class="seed-results" data-seed-search-target="results"></div>
+            <div class="seed-chips" data-seed-search-target="chips"></div>
+            <div data-seed-search-target="inputs"></div>
           </div>
+
+          <%# Période d'écoute — pills %>
+          <div class="filters-section">
+            <span class="filters-section__title">Période d'écoute</span>
+            <div class="period-pills">
+              <% [["4 semaines","short_term"],["6 mois","medium_term"],["Depuis toujours","long_term"]].each do |lbl, val| %>
+                <label class="period-pill">
+                  <%= radio_button_tag :time_range, val, (@filters[:time_range] || "long_term") == val %>
+                  <span><%= lbl %></span>
+                </label>
+              <% end %>
+            </div>
+          </div>
+
+          <%# Filtres avancés — collapsible %>
+          <div class="filters-finetune is-open" id="finetune-block">
+            <button type="button" class="filters-finetune__head" id="finetune-toggle">
+              <span>Filtres avancés</span>
+              <i class="fa-solid fa-chevron-down filters-finetune__chevron"></i>
+            </button>
+            <div class="filters-finetune__body">
+
+              <%# Mood %>
+              <div class="filter-block">
+                <span class="filter-label">Mood</span>
+                <div class="mood-pills">
+                  <% [["", "✨", "Tous"], ["chill", "🌙", "Chill"], ["energy", "⚡", "Énergie"],
+                      ["focus", "🎯", "Focus"], ["happy", "☀️", "Happy"], ["late night", "🌃", "Late night"]].each do |value, icon, lbl| %>
+                    <label class="mood-pill <%= 'is-active' if @filters[:mood].to_s == value %>">
+                      <%= radio_button_tag :mood, value, @filters[:mood].to_s == value %>
+                      <span><%= icon %> <%= lbl %></span>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+
+              <%# Décennie — slider %>
+              <% decades = [["","Toutes"],["1970","70s"],["1980","80s"],["1990","90s"],["2000","2000s"],["2010","2010s"],["2020","2020s"]] %>
+              <% decade_idx = decades.index { |v, _| v == @filters[:decade].to_s } || 0 %>
+              <div class="filter-block">
+                <div class="filter-label-row">
+                  <span class="filter-label">Décennie</span>
+                  <span class="range-value" id="decade-label"><%= decades[decade_idx][1] %></span>
+                </div>
+                <input type="range" class="range-slider" min="0" max="<%= decades.size - 1 %>" step="1"
+                       value="<%= decade_idx %>"
+                       data-range-key="decade"
+                       autocomplete="off"
+                       data-action="input->filters#rangeInput">
+                <input type="hidden" name="decade" id="decade-input" value="<%= @filters[:decade] %>">
+              </div>
+
+              <%# Tempo — slider %>
+              <% tempos = [["","Tous"],["slow","Lent 🐢"],["medium","Moyen 🚶"],["fast","Rapide 🚀"]] %>
+              <% tempo_idx = tempos.index { |v, _| v == @filters[:tempo].to_s } || 0 %>
+              <div class="filter-block">
+                <div class="filter-label-row">
+                  <span class="filter-label">Tempo</span>
+                  <span class="range-value" id="tempo-label"><%= tempos[tempo_idx][1] %></span>
+                </div>
+                <input type="range" class="range-slider" min="0" max="<%= tempos.size - 1 %>" step="1"
+                       value="<%= tempo_idx %>"
+                       data-range-key="tempo"
+                       autocomplete="off"
+                       data-action="input->filters#rangeInput">
+                <input type="hidden" name="tempo" id="tempo-input" value="<%= @filters[:tempo] %>">
+              </div>
+
+              <%# Genre — pills %>
+              <div class="filter-block">
+                <span class="filter-label">Genre</span>
+                <div class="era-pills">
+                  <% [["Tous",""],["Pop","pop"],["Rock","rock"],["Électro","electronic"],
+                      ["Hip-hop","hip-hop"],["R&B","rnb"],["Jazz","jazz"],["Classique","classical"],
+                      ["Metal","metal"],["Indie","indie"],["Soul","soul"],["Reggae","reggae"],
+                      ["Folk","folk"],["House","house"],["Techno","techno"]].each do |lbl, val| %>
+                    <label class="era-pill">
+                      <%= radio_button_tag :genre, val, @filters[:genre].to_s == val %>
+                      <span><%= lbl %></span>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+
+              <%# Nombre de titres — pills %>
+              <div class="filter-block">
+                <span class="filter-label">Nombre de titres recommandés</span>
+                <div class="era-pills">
+                  <% [["10","10"],["25","25"],["50","50"]].each do |lbl, val| %>
+                    <label class="era-pill">
+                      <%= radio_button_tag :count, val, (@filters[:count] || 10).to_s == val %>
+                      <span><%= lbl %></span>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+
+              <%# Switches %>
+              <div class="filters-switches">
+                <label class="switch">
+                  <%= check_box_tag :diverse, "1", @filters[:diverse] %>
+                  1 seul titre par artiste
+                </label>
+                <label class="switch">
+                  <%= check_box_tag :discovery, "1", @filters[:discovery] %>
+                  <span>Nouveautés seulement <span class="switch__hint">(exclue les artistes que vous connaissez)</span></span>
+                </label>
+                <label class="switch">
+                  <%= check_box_tag :exclude_disliked, "1", @filters[:exclude_disliked] %>
+                  <span>Masquer les titres déjà passés <span class="switch__hint">(exclut les sons que vous avez dislikés)</span></span>
+                </label>
+              </div>
+
+            </div>
+          </div>
+
         </div>
 
-        <%# Checkboxes %>
-        <div class="filters-switches">
-          <label class="switch">
-            <%= check_box_tag :diverse, "1", @filters[:diverse] %>
-            1 seul titre par artiste
-          </label>
-
-          <label class="switch">
-            <%= check_box_tag :discovery, "1", @filters[:discovery] %>
-            <span>Nouveautés seulement <span style="font-weight: 400; opacity: 0.7;">(exclue les artistes que vous connaissez)</span></span>
-          </label>
-
-          <label class="switch">
-            <%= check_box_tag :exclude_disliked, "1", @filters[:exclude_disliked] %>
-            <span>Masquer les titres déjà passés <span style="font-weight: 400; opacity: 0.7;">(exclut les sons que vous avez dislikés)</span></span>
-          </label>
+        <div class="filters-footer">
+          <%= submit_tag "Démarrer", class: "btn-apply-filters" %>
         </div>
-
-        <%= submit_tag "Appliquer", class: "btn-apply-filters" %>
       <% end %>
     </div>
   </div>
