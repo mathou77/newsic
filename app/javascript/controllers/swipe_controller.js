@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["card"]
+  static targets = ["card", "back"]
   static values  = { recapUrl: String }
 
   connect() {
@@ -9,7 +9,6 @@ export default class extends Controller {
     this.audioUnlocked = false
     this.isSeeking     = false
     this.startX        = 0
-    this.startY        = 0
     this.dragging      = false  // a finger is currently dragging the active card
     this.dragCard      = null
     this.dragDX        = 0
@@ -30,7 +29,7 @@ export default class extends Controller {
     document.addEventListener("touchmove",  this._seekTouchMove,  { passive: true })
     document.addEventListener("touchend",   this._seekTouchEnd)
 
-    this.cardTargets.forEach(card => this.applyCardColor(card))
+    this.applyCardColor(this.activeCard)
     this.updatePlayerIcon()
     this.armUpcoming()
 
@@ -87,19 +86,16 @@ export default class extends Controller {
     const card = this.activeCard
     if (!card) return
 
-    fetch(card.dataset.voteUrl, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
-      },
-      body: JSON.stringify({ status })
-    })
-
+    this.sendVote(card, status)
     card.classList.add(status === "liked" ? "fly-right" : "fly-left")
 
     setTimeout(() => {
       card.remove()
+      // Only now that it's detached do we offer it for "back" — avoids this
+      // pending removal racing with a restore.
+      this.history.push(card)
+      this.updateBackButton()
+
       const remaining = this.cardTargets
       if (remaining.length === 0) {
         window.location.href = this.recapUrlValue
@@ -108,6 +104,41 @@ export default class extends Controller {
         this.playCurrentAudio()
       }
     }, 400)
+  }
+
+  // Bring the last voted card back, undo its vote on the server, and make it the
+  // active card again.
+  back() {
+    const card = this.history.pop()
+    if (!card) return
+
+    this.sendVote(card, "pending")
+
+    card.classList.remove("fly-left", "fly-right")
+    this.activeCard?.classList.remove("active")
+
+    const stack = this.element.querySelector(".cards-stack")
+    stack?.prepend(card)
+    card.classList.add("active")
+
+    this.playCurrentAudio()
+    this.updateBackButton()
+  }
+
+  sendVote(card, status) {
+    fetch(card.dataset.voteUrl, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify({ status })
+    })
+  }
+
+  updateBackButton() {
+    if (!this.hasBackTarget) return
+    this.backTarget.hidden = this.history.length === 0
   }
 
   // ── Touch Swipe ───────────────────────────────────────────────────────────────
@@ -132,20 +163,36 @@ export default class extends Controller {
     if (card.querySelector(".flip-card-inner.is-flipped")) return // don't drag a flipped card
 
     this.startX        = event.touches[0].clientX
-    this.startY        = event.touches[0].clientY
     this.dragCard      = card
     this.dragging      = true
-    card.style.transition = "none" // follow the finger with no easing lag
+    // Cache the elements we animate during the drag and turn off their easing so
+    // they track the finger instantly (restored on release for the snap-back).
+    this.dragCover    = card.querySelector(".card-cover")
+    this.likeBadge    = card.querySelector(".swipe-badge--like")
+    this.dislikeBadge = card.querySelector(".swipe-badge--dislike")
+    card.style.transition = "none"
+    if (this.dragCover)    this.dragCover.style.transition = "none"
+    if (this.likeBadge)    this.likeBadge.style.transition = "none"
+    if (this.dislikeBadge) this.dislikeBadge.style.transition = "none"
   }
 
   touchMove(event) {
     if (!this.dragging || !this.dragCard) return
+    // Horizontal swipe only: ignore vertical movement entirely.
     const dx = event.touches[0].clientX - this.startX
-    const dy = event.touches[0].clientY - this.startY
     this.dragDX = dx
     // Slight rotation tied to horizontal distance, like a card being flicked.
     const rot = Math.max(-12, Math.min(12, dx / 14))
-    this.dragCard.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`
+    this.dragCard.style.transform = `translateX(${dx}px) rotate(${rot}deg)`
+
+    // Fade the cover to grey and reveal the like/dislike badge as the card nears
+    // an edge — full effect reached around the vote threshold.
+    const progress = Math.min(1, Math.abs(dx) / 110)
+    if (this.dragCover) {
+      this.dragCover.style.filter = `grayscale(${progress}) brightness(${1 - progress * 0.4})`
+    }
+    if (this.dislikeBadge) this.dislikeBadge.style.opacity = dx < 0 ? progress : 0
+    if (this.likeBadge)    this.likeBadge.style.opacity    = dx > 0 ? progress : 0
   }
 
   touchEnd() {
@@ -157,6 +204,15 @@ export default class extends Controller {
 
     card.style.transition = "" // restore the CSS easing for fly-off / snap-back
     if (Math.abs(dx) > 10) this.suppressFlip = true // it was a drag, not a tap
+
+    // Restore easing and clear the drag visuals so they animate back smoothly.
+    ;[this.dragCover, this.likeBadge, this.dislikeBadge].forEach(el => {
+      if (el) el.style.transition = ""
+    })
+    if (this.dragCover)    this.dragCover.style.filter = ""
+    if (this.likeBadge)    this.likeBadge.style.opacity = ""
+    if (this.dislikeBadge) this.dislikeBadge.style.opacity = ""
+    this.dragCover = this.likeBadge = this.dislikeBadge = null
 
     if (dx > 80) {
       card.style.transform = ""  // let .fly-right take over
@@ -266,36 +322,16 @@ export default class extends Controller {
 
   // ── Dominant Color ────────────────────────────────────────────────────────────
 
+  // The ambient colour is precomputed server-side and carried on the card as
+  // data-color. We drive a single registered custom property (--ambient-color)
+  // that both the page background and the card's back face read; the CSS
+  // transition crossfades it over ~0.6s as cards change.
   applyCardColor(card) {
-    const img = card.querySelector(".card-cover")
-    if (!img) return
-    const apply = () => this.getDominantColor(img, color => {
-      if (!color) return
-      const { r, g, b } = color
-      this.element.style.background = `
-        radial-gradient(circle at 50% 40%, rgba(${r},${g},${b},0.45) 0%, rgba(${r},${g},${b},0.08) 55%, #050510 80%),
-        #050510
-      `
-    })
-    if (img.complete) apply()
-    else img.addEventListener("load", apply)
-  }
-
-  getDominantColor(img, callback) {
-    try {
-      const canvas = document.createElement("canvas")
-      canvas.width = canvas.height = 32
-      const ctx = canvas.getContext("2d")
-      ctx.drawImage(img, 0, 0, 32, 32)
-      const data = ctx.getImageData(0, 0, 32, 32).data
-      let r = 0, g = 0, b = 0, count = 0
-      for (let i = 0; i < data.length; i += 16) {
-        const pr = data[i], pg = data[i + 1], pb = data[i + 2]
-        const brightness = (pr + pg + pb) / 3
-        if (brightness > 30 && brightness < 230) { r += pr; g += pg; b += pb; count++ }
-      }
-      if (count === 0) { callback(null); return }
-      callback({ r: Math.round(r / count), g: Math.round(g / count), b: Math.round(b / count) })
-    } catch (e) { callback(null) }
+    const color = card?.dataset.color
+    if (color) {
+      this.element.style.setProperty("--ambient-color", color)
+    } else {
+      this.element.style.removeProperty("--ambient-color") // fall back to midnight
+    }
   }
 }

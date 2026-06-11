@@ -29,25 +29,91 @@ body:has(.swipe-container) {
   flex-direction: column;
   align-items: center;
 
+  --ambient-color: #0a0a1a;
+  background-color: #0a0a1a; // fallback if color-mix/gradient is unsupported
   background:
-    radial-gradient(circle at 50% 18%, rgba(76, 90, 255, 0.35), transparent 34%),
-    radial-gradient(circle at 80% 45%, rgba(143, 76, 255, 0.22), transparent 32%),
-    #050510;
+    radial-gradient(circle at 50% 30%,
+      color-mix(in srgb, var(--ambient-color) 60%, transparent) 0%,
+      color-mix(in srgb, var(--ambient-color) 18%, transparent) 42%,
+      transparent 68%),
+    #0a0a1a;
+  transition: --ambient-color 0.6s ease;
   color: white;
   overflow: hidden;
 }
 
+// Top row above the moods: just the filters button, pinned right.
+.swipe-topbar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.swipe-topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filters-control {
+  width: auto;
+}
+
+// Mood switcher, full width, just under the top bar.
+.mood-bar {
+  width: 100%;
+  margin: 0 0 14px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+}
+
+.mood-bar__form {
+  display: flex;
+  gap: 6px;
+  width: max-content; // let the row overflow horizontally instead of wrapping
+}
+
+.mood-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba($white, 0.12);
+  background: rgba($white, 0.04);
+  color: rgba($white, 0.68);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.18s ease;
+
+  &__icon { font-size: 0.85rem; line-height: 1; }
+
+  // Selected = just the violet outline, no full gradient fill.
+  &.is-active {
+    border-color: $violet-500;
+    color: $white;
+    background: rgba($violet-500, 0.12);
+    box-shadow: 0 0 0 1px rgba($violet-500, 0.6);
+  }
+}
+
 .filters-toggle {
   display: inline-flex;
-  align-self: flex-end;
-  margin-bottom: 16px;
   position: relative;
   z-index: 10;
 
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
+  gap: 6px;
+  padding: 7px 13px;
   border-radius: 999px;
   border: 1px solid rgba($white, 0.15);
   background: rgba(18, 16, 28, 0.8);
@@ -56,13 +122,13 @@ body:has(.swipe-container) {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba($white, 0.08);
 
   color: rgba($white, 0.85);
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   cursor: pointer;
   transition: all 0.2s ease;
 
-  svg { opacity: 0.8; }
+  svg { opacity: 0.8; width: 16px; height: 16px; }
 
   &::after {
     content: "Filtres";
@@ -601,6 +667,33 @@ body:has(.swipe-container) {
   width: 100%;
   height: 330px;
   object-fit: cover;
+  transition: filter 0.3s ease; // smooth un-grey when the card snaps back
+}
+
+// Like / dislike feedback shown while dragging a card. JS fades these in via
+// inline opacity proportional to the drag distance.
+.swipe-badge {
+  position: absolute;
+  top: 90px;
+  z-index: 12;
+  font-size: 6rem;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.55));
+}
+
+.swipe-badge--dislike {
+  left: 28px;
+  color: #ff3b30;
+  transform: rotate(-14deg);
+}
+
+.swipe-badge--like {
+  right: 28px;
+  color: #2ec67a;
+  transform: rotate(14deg);
 }
 
 .card-info {
@@ -744,10 +837,12 @@ body:has(.swipe-container) {
 // ── Swipe buttons ─────────────────────────────────────────────────────────────
 
 .swipe-buttons {
+  position: relative;
+  width: 100%;
   display: flex;
-  justify-content: center;
+  align-items: center;
+  justify-content: center; // only dislike + like are in flow, so they stay put
   gap: 58px;
-  padding: 0 24px;
   margin-top: 20px;
 }
 
@@ -764,6 +859,36 @@ body:has(.swipe-container) {
     transform: scale(0.92);
   }
 }
+
+// Smaller secondary buttons (back / playlist), pinned to the edges so they
+// never push the dislike/like pair off-center.
+.swipe-buttons .swipe-mini {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  margin: auto 0; // vertical centering without a transform (keeps :active scale)
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  font-size: 0.95rem;
+  background: rgba(18, 16, 28, 0.85);
+  border: 1.5px solid rgba($white, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: rgba($white, 0.75);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+
+  &:hover {
+    border-color: rgba($violet-500, 0.5);
+    color: $white;
+  }
+  &[hidden] { display: none; }
+}
+
+.swipe-buttons .swipe-mini--back     { left: 6px; }
+.swipe-buttons .swipe-mini--playlist { right: 6px; }
 
 .btn-dislike {
   background: rgba(18, 16, 28, 0.85);
@@ -920,7 +1045,11 @@ body:has(.swipe-container) {
   position: absolute;
   inset: 0;
   transform: rotateY(180deg);
-  background: linear-gradient(180deg, #151326 0%, #0d0d18 100%);
+  // Tint the back face ("l'autre côté") with the same ambient cover colour.
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--ambient-color) 55%, #151326) 0%,
+    #0d0d18 100%);
+  transition: --ambient-color 0.6s ease;
   color: white;
   padding: 18px 20px 110px;
   border-radius: 28px;

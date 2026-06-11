@@ -22,7 +22,7 @@ class LastfmService
         format: "json",
         limit: limit
       })
-      response.dig("tracks", "track") || []
+      dig_response(response, "tracks", "track")
     end
   end
 
@@ -35,7 +35,7 @@ class LastfmService
         format: "json",
         limit: limit
       })
-      response.dig("toptracks", "track") || []
+      dig_response(response, "toptracks", "track")
     end
   end
 
@@ -50,7 +50,7 @@ class LastfmService
         format: "json",
         limit: limit
       })
-      response.dig("similartracks", "track") || []
+      dig_response(response, "similartracks", "track")
     end
   end
 
@@ -60,5 +60,16 @@ class LastfmService
       top_tracks_by_tag(tag, limit: limit / tags.size)
     end
     all_tracks.uniq { |t| t["name"] }.shuffle
+  end
+
+  private
+
+  # HTTParty::Response doesn't reliably delegate `dig`, and the parsed body may
+  # not be a Hash on errors or rate limits — guard the type before digging.
+  def dig_response(response, *keys)
+    body = response.parsed_response
+    return [] unless body.is_a?(Hash)
+
+    body.dig(*keys) || []
   end
 end

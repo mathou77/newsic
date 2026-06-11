@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_09_085113) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_11_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -123,6 +123,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_085113) do
     t.string "artist_picture"
     t.datetime "created_at", null: false
     t.bigint "deezer_id"
+    t.string "dominant_color"
     t.integer "duration"
     t.boolean "explicit"
     t.string "genre"
