@@ -155,7 +155,7 @@ export default class extends Controller {
     if (this.element.querySelector(".share-sheet.is-open")) return
     // Don't drag the card when the touch starts on the surrounding UI or on the
     // card's own controls (player bar, share, artist link) — those handle taps.
-    if (event.target.closest(".filters-panel")) return
+    if (event.target.closest(".swipe-topbar, .mood-bar, .filters-panel")) return
     if (event.target.closest(".card-player-bar, .card-share, .card-artist-link")) return
 
     const card = this.activeCard

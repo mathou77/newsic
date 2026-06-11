@@ -636,7 +636,7 @@ body:has(.swipe-container) {
   position: relative;
   width: 100%;
   max-width: 340px;
-  height: 520px;
+  height: 470px; // hug the card content so no dead space sits below the title
   margin: 0 auto;
   touch-action: none; // the card drag is fully JS-driven; no native gestures here
 }
@@ -674,7 +674,8 @@ body:has(.swipe-container) {
 // inline opacity proportional to the drag distance.
 .swipe-badge {
   position: absolute;
-  top: 90px;
+  top: 165px; // centre of the 330px-tall album cover
+  left: 50%;
   z-index: 12;
   font-size: 6rem;
   line-height: 1;
@@ -685,15 +686,13 @@ body:has(.swipe-container) {
 }
 
 .swipe-badge--dislike {
-  left: 28px;
   color: #ff3b30;
-  transform: rotate(-14deg);
+  transform: translate(-50%, -50%) rotate(-14deg);
 }
 
 .swipe-badge--like {
-  right: 28px;
   color: #2ec67a;
-  transform: rotate(14deg);
+  transform: translate(-50%, -50%) rotate(14deg);
 }
 
 .card-info {
